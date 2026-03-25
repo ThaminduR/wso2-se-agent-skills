@@ -10,7 +10,7 @@ You are an AI assistant creating a detailed implementation plan for a confirmed 
 
 ## Step 0: Load Context
 
-1. Read `agents.md` from the repository root. If it doesn't exist or is missing **Architecture** or **Feature Inventory** sections, stop and report what's missing.
+1. Read `agents.md` from the repository root. If it doesn't exist or is missing **Architecture**, **Feature Inventory**, or **Testing** sections, stop and report what's missing.
 2. Read `.ai/issue-analysis.md`. If it doesn't exist, tell the developer to run `/reproduce` first.
 3. Verify the issue is classified as a **Bug** in the analysis. If not, stop.
 
@@ -37,11 +37,26 @@ If there are multiple valid approaches, or if the fix might change observable be
 
 ## Step 5: Design the Test Plan
 
-Specify exact tests to write:
+Before designing tests, read and follow the project's testing conventions from `agents.md`:
+
+1. **Determine the test framework:** Check `agents.md > Testing > Test Framework & Conventions` for which frameworks the project uses (JUnit 4, JUnit 5, TestNG, etc.). All new tests **must** use the same framework — do not introduce a different one.
+
+2. **Follow naming conventions:** Use the test naming pattern defined in `agents.md > Testing > Test Framework & Conventions` (e.g., `testMethodName_scenario_expectedResult`, or whatever the project convention is). Look at existing tests near the affected code for concrete examples.
+
+3. **Place tests in the correct location:** Use `agents.md > Testing > Test Framework & Conventions` to determine where tests live relative to source code (e.g., `src/test/java/...` mirroring the source package, or a separate test module). Unit tests and integration tests may live in different directories or modules — follow what the project already does.
+
+4. **Use project test infrastructure:** Check `agents.md > Testing > Test Infrastructure` for available test containers, mock services, base test classes, test utilities, or fixtures. Reuse existing helpers rather than creating new ones.
+
+5. **Determine test commands:** Reference `agents.md > Testing > Running Tests` so the implementation plan includes the exact commands to run the new tests and the affected module's existing test suite.
+
+Now specify the exact tests to write:
 - What each test asserts
-- Which category (unit/integration)
-- Where it lives in the project
+- Which category (unit/integration) and why
+- The file path where it lives (following the project's directory structure)
+- The test framework and base class to use
+- Any test infrastructure dependencies (containers, mock services, fixtures)
 - Include negative and boundary cases
+- The command to run each test individually and as part of the suite
 
 ## Step 6: Document Breaking Changes
 
@@ -78,15 +93,21 @@ Reference existing patterns from the codebase.]
 
 ## Test Plan
 
+### Testing Conventions (from agents.md)
+- **Framework:** [e.g., JUnit 5, TestNG — as specified in agents.md]
+- **Naming pattern:** [e.g., testMethodName_scenario_expectedResult]
+- **Base class / utilities:** [any project base test class or test helpers to extend/use]
+- **Test infrastructure:** [containers, mock services, or fixtures needed]
+
 ### New Tests
-| Test Name | Type | Asserts | Location |
-|-----------|------|---------|----------|
-| testXReturnsYWhenZ | Unit | [assertion] | path/to/TestFile.java |
-| testXFailsGracefullyOnInvalidInput | Unit | [assertion] | path/to/TestFile.java |
-| testEndToEndFlowWithFix | Integration | [assertion] | path/to/ITFile.java |
+| Test Name | Type | Asserts | Location | Run Command |
+|-----------|------|---------|----------|-------------|
+| testXReturnsYWhenZ | Unit | [assertion] | path/to/TestFile.java | [command] |
+| testXFailsGracefullyOnInvalidInput | Unit | [assertion] | path/to/TestFile.java | [command] |
+| testEndToEndFlowWithFix | Integration | [assertion] | path/to/ITFile.java | [command] |
 
 ### Existing Tests to Run
-[List of existing test classes/suites that must pass after the change]
+[List of existing test classes/suites that must pass after the change, with the exact commands from agents.md > Testing > Running Tests]
 
 ## Impact Assessment
 - **Affected components:** [list]
