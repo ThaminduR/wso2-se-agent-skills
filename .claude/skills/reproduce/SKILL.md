@@ -17,7 +17,29 @@ Once found, verify it contains the **Deployment** and **Feature Inventory** sect
 
 ## Step 1: Classify the Issue
 
-Read the GitHub issue (title, body, labels, and comments) using the provided issue URL or ID.
+Fetch the GitHub issue using the `gh` CLI. The developer will provide either a full URL (e.g., `https://github.com/org/repo/issues/123`) or a repo and issue number.
+
+```bash
+# If given a full URL
+gh issue view <URL>
+
+# If given a repo and number
+gh issue view <number> --repo <owner/repo>
+
+# To also read comments
+gh issue view <number> --repo <owner/repo> --comments
+```
+
+Read the issue title, body, labels, and comments from the output.
+
+**Handling images/screenshots:** The `gh` output will contain image URLs as markdown links (e.g., `![screenshot](https://...)`). If the issue includes screenshots or images that may be important for understanding the bug, download them and view them:
+
+```bash
+# Download the image to a temp file
+curl -sL "<image-url>" -o /tmp/issue-screenshot.png
+```
+
+Then read the downloaded file to view it. Do this for any images that appear relevant to understanding or reproducing the bug.
 
 Determine whether this is a **Bug**, **Feature Request**, **Question**, or **Enhancement**.
 
