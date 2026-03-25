@@ -1,7 +1,7 @@
 ---
 name: review-plan
 description: Independently validate the implementation plan before code is written. Acts as a quality gate.
-user_invocable: true
+user-invocable: true
 ---
 
 # /review-plan — Plan Review & Validation

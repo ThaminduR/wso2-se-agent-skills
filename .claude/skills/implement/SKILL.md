@@ -1,7 +1,7 @@
 ---
 name: implement
 description: Execute the approved implementation plan — write the fix, write the tests, and verify everything works.
-user_invocable: true
+user-invocable: true
 ---
 
 # /implement — Code Implementation

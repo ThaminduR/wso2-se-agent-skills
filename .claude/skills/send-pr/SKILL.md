@@ -1,7 +1,7 @@
 ---
 name: send-pr
 description: Assemble and submit a pull request with proper metadata, description, and labels.
-user_invocable: true
+user-invocable: true
 ---
 
 # /send-pr — Pull Request Submission

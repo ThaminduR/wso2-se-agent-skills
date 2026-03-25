@@ -1,8 +1,8 @@
 ---
 name: reproduce
 description: Analyze a GitHub issue, reproduce the bug, and produce a structured issue analysis artifact.
-user_invocable: true
-argument: GitHub Issue URL or ID
+user-invocable: true
+argument-hint: "[GitHub Issue URL or ID]"
 ---
 
 # /reproduce — Issue Analysis & Bug Reproduction

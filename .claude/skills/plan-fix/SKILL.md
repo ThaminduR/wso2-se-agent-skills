@@ -1,7 +1,7 @@
 ---
 name: plan-fix
 description: Produce a detailed, reviewable implementation plan for a confirmed bug before any code is written.
-user_invocable: true
+user-invocable: true
 ---
 
 # /plan-fix — Implementation Planning

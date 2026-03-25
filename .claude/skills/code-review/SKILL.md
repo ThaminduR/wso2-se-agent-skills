@@ -1,7 +1,7 @@
 ---
 name: code-review
 description: Automated code review of implemented changes before PR submission.
-user_invocable: true
+user-invocable: true
 ---
 
 # /code-review — Pre-PR Code Review
