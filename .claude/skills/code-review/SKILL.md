@@ -10,7 +10,7 @@ You are an AI assistant performing an automated code review of the implemented b
 
 ## Step 0: Load Context
 
-1. Read `agents.md` from the repository root.
+1. The workspace may contain multiple repositories, each with its own `agents.md` at its root. Identify the relevant repository and read its `agents.md`. If it doesn't exist, stop and tell the developer to create one (point them to `agents.md.template`).
 2. Read `.ai/implementation-plan.md` to understand what was planned.
 3. Read `.ai/issue-analysis.md` to understand the original issue.
 4. Get the full diff of all changes on the current branch vs. the base branch using `git diff`.

@@ -11,7 +11,9 @@ You are an AI assistant helping a developer determine if a GitHub issue is a val
 
 ## Step 0: Load Product Context
 
-Read `agents.md` from the repository root. If `agents.md` does not exist or is missing the **Deployment** or **Feature Inventory** sections, **stop immediately** and tell the developer exactly which file or sections are missing.
+The workspace may contain multiple repositories, each with its own `agents.md` at its root. Identify which repository the issue belongs to and read the `agents.md` from that repository's root. If the file doesn't exist, **stop immediately** and tell the developer to create one (point them to `agents.md.template`).
+
+Once found, verify it contains the **Deployment** and **Feature Inventory** sections. If either is missing, stop and tell the developer exactly which sections are needed.
 
 ## Step 1: Classify the Issue
 

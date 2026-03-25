@@ -10,7 +10,7 @@ You are an AI assistant creating a detailed implementation plan for a confirmed 
 
 ## Step 0: Load Context
 
-1. Read `agents.md` from the repository root. If it doesn't exist or is missing **Architecture**, **Feature Inventory**, or **Testing** sections, stop and report what's missing.
+1. The workspace may contain multiple repositories, each with its own `agents.md` at its root. Identify the relevant repository and read its `agents.md`. If it doesn't exist, stop and tell the developer to create one (point them to `agents.md.template`). Verify it contains **Architecture**, **Feature Inventory**, and **Testing** sections. If any are missing, stop and report what's needed.
 2. Read `.ai/issue-analysis.md`. If it doesn't exist, tell the developer to run `/reproduce` first.
 3. Verify the issue is classified as a **Bug** in the analysis. If not, stop.
 
