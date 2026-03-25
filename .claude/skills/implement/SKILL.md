@@ -76,7 +76,7 @@ Report the implementation results to the developer using this format:
 ## Changes Made
 | File | Change Summary |
 |------|---------------|
-| path/to/File.java | [what was changed] |
+| path/to/file | [what was changed] |
 | ... | ... |
 
 ## Tests Written

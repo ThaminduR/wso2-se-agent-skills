@@ -72,7 +72,7 @@ Create the directory `.ai/` at the repo root if it doesn't exist. Write the anal
 
 ## Reproducibility
 - **Reproducible:** Yes / No / Not Attempted (with reason)
-- **Environment:** [branch, JDK version, OS, relevant config]
+- **Environment:** [branch, language/runtime version, OS, relevant config]
 - **Steps Executed:**
   1. [step]
   2. [step]

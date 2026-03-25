@@ -39,11 +39,11 @@ If there are multiple valid approaches, or if the fix might change observable be
 
 Before designing tests, read and follow the project's testing conventions from `agents.md`:
 
-1. **Determine the test framework:** Check `agents.md > Testing > Test Framework & Conventions` for which frameworks the project uses (JUnit 4, JUnit 5, TestNG, etc.). All new tests **must** use the same framework — do not introduce a different one.
+1. **Determine the test framework:** Check `agents.md > Testing > Test Framework & Conventions` for which frameworks the project uses (e.g., JUnit, pytest, Jest, Mocha, etc.). All new tests **must** use the same framework — do not introduce a different one.
 
 2. **Follow naming conventions:** Use the test naming pattern defined in `agents.md > Testing > Test Framework & Conventions` (e.g., `testMethodName_scenario_expectedResult`, or whatever the project convention is). Look at existing tests near the affected code for concrete examples.
 
-3. **Place tests in the correct location:** Use `agents.md > Testing > Test Framework & Conventions` to determine where tests live relative to source code (e.g., `src/test/java/...` mirroring the source package, or a separate test module). Unit tests and integration tests may live in different directories or modules — follow what the project already does.
+3. **Place tests in the correct location:** Use `agents.md > Testing > Test Framework & Conventions` to determine where tests live relative to source code (e.g., `src/test/` mirroring the source structure, a `tests/` directory, or a separate test module). Unit tests and integration tests may live in different directories or modules — follow what the project already does.
 
 4. **Use project test infrastructure:** Check `agents.md > Testing > Test Infrastructure` for available test containers, mock services, base test classes, test utilities, or fixtures. Reuse existing helpers rather than creating new ones.
 
@@ -80,7 +80,7 @@ One-paragraph description of what will be changed and why.
 ### Files to Modify
 | File | Change Description | Rationale |
 |------|--------------------|-----------|
-| path/to/File.java | [what changes] | [why this specific change] |
+| path/to/file | [what changes] | [why this specific change] |
 | ... | ... | ... |
 
 ### Implementation Steps
@@ -94,7 +94,7 @@ Reference existing patterns from the codebase.]
 ## Test Plan
 
 ### Testing Conventions (from agents.md)
-- **Framework:** [e.g., JUnit 5, TestNG — as specified in agents.md]
+- **Framework:** [as specified in agents.md, e.g., JUnit, pytest, Jest, etc.]
 - **Naming pattern:** [e.g., testMethodName_scenario_expectedResult]
 - **Base class / utilities:** [any project base test class or test helpers to extend/use]
 - **Test infrastructure:** [containers, mock services, or fixtures needed]
@@ -102,9 +102,9 @@ Reference existing patterns from the codebase.]
 ### New Tests
 | Test Name | Type | Asserts | Location | Run Command |
 |-----------|------|---------|----------|-------------|
-| testXReturnsYWhenZ | Unit | [assertion] | path/to/TestFile.java | [command] |
-| testXFailsGracefullyOnInvalidInput | Unit | [assertion] | path/to/TestFile.java | [command] |
-| testEndToEndFlowWithFix | Integration | [assertion] | path/to/ITFile.java | [command] |
+| test_x_returns_y_when_z | Unit | [assertion] | path/to/test_file | [command] |
+| test_x_fails_gracefully_on_invalid_input | Unit | [assertion] | path/to/test_file | [command] |
+| test_end_to_end_flow_with_fix | Integration | [assertion] | path/to/test_file | [command] |
 
 ### Existing Tests to Run
 [List of existing test classes/suites that must pass after the change, with the exact commands from agents.md > Testing > Running Tests]

@@ -28,7 +28,7 @@ Read the full diff. For every changed line, verify it maps back to the implement
 Review for:
 - **Naming consistency** — do new names follow existing conventions?
 - **Error handling completeness** — are all error paths handled? Are exceptions caught at the right level?
-- **Resource cleanup** — try-with-resources, null checks, connection closing.
+- **Resource cleanup** — proper cleanup of resources (file handles, connections, memory), null/nil checks.
 - **Logging appropriateness** — is logging at the right level? No sensitive data in logs?
 - **Coding conventions** — adherence to `agents.md > Coding Conventions`.
 
@@ -63,7 +63,7 @@ Flag any obvious performance concerns:
 
 ## Step 6: Documentation Check
 
-- Are Javadoc/comments updated where behavior changed?
+- Are doc comments/inline comments updated where behavior changed?
 - Are any public API changes reflected in documentation?
 - Are new test methods documented with their purpose?
 
