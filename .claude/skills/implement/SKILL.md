@@ -13,7 +13,7 @@ You are an AI assistant executing an approved implementation plan. You will writ
 1. Read `agents.md` from the repository root. Verify **Deployment**, **Testing**, and **Coding Conventions** sections exist.
 2. Read `.ai/implementation-plan.md`. If it doesn't exist, tell the developer to run `/plan-fix` first.
 3. Read `.ai/issue-analysis.md`. If it doesn't exist, tell the developer to run `/reproduce` first.
-4. Read `.ai/plan-review-report.md`. Verify the verdict is **"Approved"**. If not approved or the file doesn't exist, stop and tell the developer the plan must be approved via `/review-plan` first.
+4. If `.ai/plan-review-report.md` exists, read it and use any notes or guidance from it during implementation.
 
 ## Step 1: Apply Code Changes
 
@@ -76,7 +76,7 @@ Report the implementation results to the developer using this format:
 ## Changes Made
 | File | Change Summary |
 |------|---------------|
-| path/to/File.java | [what was changed] |
+| path/to/file | [what was changed] |
 | ... | ... |
 
 ## Tests Written
