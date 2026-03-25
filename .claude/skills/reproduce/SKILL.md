@@ -39,7 +39,15 @@ Read the issue title, body, labels, and comments from the output.
 curl -sL "<attachment-url>" -o /tmp/<filename>
 ```
 
-Then read the downloaded file to inspect it. For images (`.png`, `.jpg`, `.gif`), reading the file will display them visually. For text-based files (`.log`, `.txt`, `.json`, `.yaml`, `.xml`, `.csv`, etc.), reading will show the content directly.
+Then inspect the downloaded file based on its type:
+- **Images** (`.png`, `.jpg`, `.gif`): Read the file to display it visually.
+- **Text files** (`.log`, `.txt`, `.json`, `.yaml`, `.xml`, `.csv`, etc.): Read the file to view content directly.
+- **Archives** (`.zip`, `.tar.gz`, `.gz`): Extract first, then inspect the contents:
+  ```bash
+  unzip /tmp/<filename>.zip -d /tmp/issue-attachments/
+  # or: tar -xzf /tmp/<filename>.tar.gz -C /tmp/issue-attachments/
+  ```
+  List the extracted files and read the relevant ones.
 
 Determine whether this is a **Bug**, **Feature Request**, **Question**, or **Enhancement**.
 
