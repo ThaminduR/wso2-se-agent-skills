@@ -10,7 +10,7 @@ You are an AI assistant assembling and submitting a pull request for a completed
 
 ## Step 0: Load Context
 
-1. Read `agents.md` from the repository root. Verify **Contribution Guidelines** section exists.
+1. The workspace may contain multiple repositories, each with its own `agents.md` at its root. Identify the relevant repository and read its `agents.md`. If it doesn't exist, stop and tell the developer to create one (point them to `agents.md.template`). Verify it contains the **Contribution Guidelines** section.
 2. Read `.ai/code-review-report.md`. Verify the verdict is **"Ready for PR"**. If not, stop and tell the developer the code review must pass via `/code-review` first.
 3. Read `.ai/issue-analysis.md` for the issue details.
 4. Read `.ai/implementation-plan.md` for the fix description.

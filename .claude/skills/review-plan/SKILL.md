@@ -10,7 +10,7 @@ You are an AI assistant performing an independent review of an implementation pl
 
 ## Step 0: Load Context
 
-1. Read `agents.md` from the repository root. If it doesn't exist, stop and report.
+1. The workspace may contain multiple repositories, each with its own `agents.md` at its root. Identify the relevant repository and read its `agents.md`. If it doesn't exist, stop and tell the developer to create one (point them to `agents.md.template`).
 2. Read `.ai/implementation-plan.md`. If it doesn't exist, tell the developer to run `/plan-fix` first.
 3. Read `.ai/issue-analysis.md`. If it doesn't exist, tell the developer to run `/reproduce` first.
 4. Verify `implementation-plan.md` has **no unresolved open questions**. If it does, stop and tell the developer to resolve them first.

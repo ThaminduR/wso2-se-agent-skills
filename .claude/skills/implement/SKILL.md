@@ -10,7 +10,7 @@ You are an AI assistant executing an approved implementation plan. You will writ
 
 ## Step 0: Load Context
 
-1. Read `agents.md` from the repository root. Verify **Deployment**, **Testing**, and **Coding Conventions** sections exist.
+1. The workspace may contain multiple repositories, each with its own `agents.md` at its root. Identify the relevant repository and read its `agents.md`. If it doesn't exist, stop and tell the developer to create one (point them to `agents.md.template`). Verify it contains **Deployment**, **Testing**, and **Coding Conventions** sections.
 2. Read `.ai/implementation-plan.md`. If it doesn't exist, tell the developer to run `/plan-fix` first.
 3. Read `.ai/issue-analysis.md`. If it doesn't exist, tell the developer to run `/reproduce` first.
 4. If `.ai/plan-review-report.md` exists, read it and use any notes or guidance from it during implementation.
