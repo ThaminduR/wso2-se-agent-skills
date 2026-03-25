@@ -32,14 +32,14 @@ gh issue view <number> --repo <owner/repo> --comments
 
 Read the issue title, body, labels, and comments from the output.
 
-**Handling images/screenshots:** The `gh` output will contain image URLs as markdown links (e.g., `![screenshot](https://...)`). If the issue includes screenshots or images that may be important for understanding the bug, download them and view them:
+**Handling attachments:** The `gh` output will contain attachment URLs as markdown links. Issues may include images, log files, config files, JSON payloads, etc. Download and inspect any attachments that are relevant to understanding the bug:
 
 ```bash
-# Download the image to a temp file
-curl -sL "<image-url>" -o /tmp/issue-screenshot.png
+# Download an attachment to a temp file
+curl -sL "<attachment-url>" -o /tmp/<filename>
 ```
 
-Then read the downloaded file to view it. Do this for any images that appear relevant to understanding or reproducing the bug.
+Then read the downloaded file to inspect it. For images (`.png`, `.jpg`, `.gif`), reading the file will display them visually. For text-based files (`.log`, `.txt`, `.json`, `.yaml`, `.xml`, `.csv`, etc.), reading will show the content directly.
 
 Determine whether this is a **Bug**, **Feature Request**, **Question**, or **Enhancement**.
 
