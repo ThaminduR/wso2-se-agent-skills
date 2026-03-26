@@ -1,0 +1,20 @@
+Prompt 1
+
+hey the following issue is reported in the product: https://github.com/wso2/api-platform/issues/1474, as product expert you should validate this issue    
+  and check whether the bug report is actually a bug. Keep in mind the content of the issue might be wrong as well. While working on the analysing the      
+  issue before coming to any conclusion double check with the code and related product/library/tech documenations
+
+
+Prompt 2
+
+The following product issue was reported: https://github.com/wso2/api-platform/issues/1474.
+Please validate whether it is a real bug. Do not assume the issue description is accurate. Before reaching a conclusion, verify the behavior against the code and relevant product, library, and technical documentation. 
+
+Prompt 3
+
+The following product issue was reported: https://github.com/wso2/api-platform/issues/1474.
+Please validate whether it is a real bug. Do not assume the solutions given by the reporter are accurate. Independently come up with the correct resolution for this issue.
+
+Prompt 4
+The following product issue was reported: https://github.com/wso2/api-platform/issues/1474.
+Please validate whether it is a real bug. Do not assume the solutions given by the reporter are accurate. Independently come up with the correct resolution for this issue. When applicable verify against the code and relevant product, library, and technical documentation

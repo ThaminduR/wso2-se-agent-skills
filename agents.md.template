@@ -42,9 +42,11 @@
 
 ## Feature Inventory [REQUIRED]
 <!-- Used by: /reproduce, /plan-fix -->
+<!-- Point to where each feature's documentation lives so the agent can look up
+     details when investigating an issue. -->
 
-| Feature | Entry Point(s) | Related Components |
-|---------|----------------|--------------------|
+| Feature | Documentation | Related Components |
+|---------|---------------|--------------------|
 | | | |
 
 ## Deployment [REQUIRED]
