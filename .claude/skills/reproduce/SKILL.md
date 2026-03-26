@@ -1,103 +1,56 @@
 ---
 name: reproduce
-description: Analyze a GitHub issue, reproduce the bug, and produce a structured issue analysis artifact.
+description: Analyze a GitHub issue, reproduce the bug, and write a structured analysis to .ai/issue-analysis.md.
 user-invocable: true
 argument-hint: "[GitHub Issue URL or ID]"
 ---
 
-# /reproduce — Issue Analysis & Bug Reproduction
+# /reproduce — Bug Reproduction & Analysis
 
-You are an AI assistant helping a developer determine if a GitHub issue is a valid, reproducible bug. Follow the procedure below precisely.
+Analyze the given GitHub issue, attempt to reproduce it, and write a structured artifact.
 
-## Step 0: Load Product Context
+## Procedure
 
-The workspace may contain multiple repositories, each with its own `agents.md` at its root. Identify which repository the issue belongs to and read the `agents.md` from that repository's root. If the file doesn't exist, **stop immediately** and tell the developer to create one (point them to `agents.md.template`).
+### 1. Classify
+Read the issue (title, body, labels, comments). Determine if it's a **Bug**, **Feature Request**, **Question**, or **Enhancement**.
+- If not a bug → report classification and stop.
+- If multiple bugs are bundled → ask the developer to split before proceeding.
 
-Once found, verify it contains the **Deployment** and **Feature Inventory** sections. If either is missing, stop and tell the developer exactly which sections are needed.
+### 2. Reproduce
+Set up the environment and follow the reported steps. Note: branch, runtime/language version, OS, and any relevant config.
 
-## Step 1: Classify the Issue
-
-Read the GitHub issue (title, body, labels, and comments) using the provided issue URL or ID.
-
-Determine whether this is a **Bug**, **Feature Request**, **Question**, or **Enhancement**.
-
-- If it is **not a bug**, report the classification and stop. Do not proceed further.
-- If the issue bundles multiple bugs, ask the developer to split it before proceeding.
-
-## Step 2: Determine Reproducibility Need
-
-Some bugs are obvious from code inspection alone (e.g., typo in config key, null-pointer from missing null-check). If the root cause is clear without running the product, skip to Step 6.
-
-Otherwise, proceed to Step 3.
-
-## Step 3: Environment Setup
-
-Using `agents.md > Deployment`:
-1. Build the product from the relevant branch.
-2. Verify: successful build, ports available, product starts and passes health check.
-
-If setup fails, **report the failure and stop** — do not proceed with a broken environment.
-
-## Step 4: Reproduce the Bug
-
-Using `agents.md > Feature Inventory`, locate the feature referenced in the issue.
-
-1. Follow the reproduction steps from the issue (or infer reasonable steps if not provided).
-2. Capture all logs, error output, and HTTP responses.
-3. Record expected vs. actual behavior.
-
-## Step 5: Locate Related Tests
-
-Search for existing unit and integration tests covering the affected code path. Note:
-- Which tests exist
-- Which pass/fail
-- Which paths have **no** test coverage at all
-
-## Step 6: Cleanup
-
-- Stop any servers started.
-- Revert any temporary config or data changes.
-- Ensure the working tree is clean.
-
-## Step 7: Write the Output Artifact
-
-Create the directory `.ai/` at the repo root if it doesn't exist. Write the analysis to `.ai/issue-analysis.md` using this exact format:
-
+### 3. Write Artifact
+Create `.ai/` at repo root if absent. Write `.ai/issue-analysis.md`:
 ```markdown
-# Issue Analysis — [Issue #ID]: [Issue Title]
+# Issue Analysis — [#ID]: [Title]
 
 ## Classification
-- **Type:** Bug / Not a Bug (with explanation)
-- **Severity Assessment:** Critical / High / Medium / Low
-- **Affected Component(s):** [from agents.md module map]
-- **Affected Feature(s):** [from agents.md feature inventory]
+- **Type:** Bug | Not a Bug — [brief reason]
+- **Severity:** Critical | High | Medium | Low
+- **Affected Component(s):**
+- **Affected Feature(s):**
 
 ## Reproducibility
-- **Reproducible:** Yes / No / Not Attempted (with reason)
-- **Environment:** [branch, language/runtime version, OS, relevant config]
+- **Reproducible:** Yes | No | Not Attempted — [reason]
+- **Environment:** [branch, runtime, OS, config]
 - **Steps Executed:**
-  1. [step]
-  2. [step]
-- **Expected Behavior:** [what should happen]
-- **Actual Behavior:** [what actually happened]
-- **Logs/Evidence:** [attached or inline]
+  1.
+- **Expected:** [what should happen]
+- **Actual:** [what happened]
+- **Evidence:** [logs or inline output]
 
 ## Root Cause Hypothesis
-Brief analysis of what is likely causing the bug based on code inspection
-and reproduction results.
+[Code-informed analysis of the likely cause]
 
-## Test Coverage Assessment
-- **Existing tests covering this path:** [list with pass/fail status]
-- **Coverage gaps identified:** [paths with no tests]
-- **Proposed test plan:**
-  - Unit test: [description]
-  - Integration test: [description]
-  - Negative/edge cases: [description]
+## Test Coverage
+- **Existing tests on this path:** [list + pass/fail]
+- **Gaps:** [untested paths]
+- **Proposed tests:** unit / integration / edge cases
 ```
 
-## Important Rules
+### 4. Cleanup
+Stop any started servers. Revert temp config or data changes. Leave the working tree clean.
 
-- **Never guess.** If you encounter ambiguity you cannot resolve from available documents, stop and ask the developer.
-- **Artifacts over memory.** The output artifact must be complete enough for a different agent to pick up where you left off.
-- **Minimal scope.** Operate on a single issue at a time.
-- After writing the artifact, inform the developer that they should review `issue-analysis.md` and confirm the analysis before proceeding to `/plan-fix`.
+## Rules
+- **Never guess** — if anything is ambiguous, stop and ask.
+- **Artifact must be self-contained** — sufficient for another agent to continue.
