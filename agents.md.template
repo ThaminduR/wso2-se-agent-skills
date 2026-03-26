@@ -1,10 +1,10 @@
 # agents.md — [Product Name]
 
 <!--
-  This file provides product context for AI-assisted bug fix skills.
+  This file provides product context for AI-assisted skills (/reproduce, /create-automation).
   Place this file at the root of your repository and fill in each section.
 
-  Sections marked [REQUIRED] are read by skills and will block execution if missing.
+  Sections marked [REQUIRED] must have substantive content — skills will stop if they are missing.
   Sections marked [OPTIONAL] improve quality but skills will still run without them.
 -->
 
@@ -14,29 +14,17 @@
 
 
 ## Architecture [REQUIRED]
-<!-- Used by: /plan-fix, /review-plan -->
-
-### System Architecture
-<!-- High-level architecture: monolith, microservices, modular monorepo, etc.
-     Key runtime components and how they interact. -->
-
-
+<!-- Reference: link to detailed architecture docs, or describe inline. -->
 
 ### Module/Component Map [REQUIRED]
-<!-- Used by: /reproduce (to identify affected components) -->
+<!-- Used by: /reproduce, /create-automation -->
 
 | Module | Path | Responsibility |
 |--------|------|----------------|
 | | | |
 
-### Key Abstractions & Patterns
-<!-- Used by: /plan-fix (to align fixes with existing patterns) -->
-<!-- Design patterns used, naming conventions, component lifecycle, extension points. -->
-
-
-
-### Inter-Component Communication [OPTIONAL]
-<!-- How modules talk to each other: REST, gRPC, events, message queues, direct calls, etc. -->
+### Key Abstractions & Patterns [OPTIONAL]
+<!-- Design patterns, naming conventions, extension points. -->
 
 
 
@@ -50,7 +38,7 @@
 | | | |
 
 ## Deployment [REQUIRED]
-<!-- Used by: /reproduce, /implement -->
+<!-- Used by: /reproduce -->
 
 ### Prerequisites
 <!-- Runtime requirements: language version, database, external services, etc. -->
@@ -64,22 +52,22 @@
 
 ```
 
-### Configuration [OPTIONAL]
-<!-- Key config files, environment variables, and default ports. -->
-
-
-
 ### Health Check
 <!-- How to verify the product started successfully: URLs, CLI commands, log markers. -->
 
 
 
+### Build Scope [OPTIONAL]
+<!-- Module-scoped build commands for building only affected modules. -->
+
+| Module | Build Command | Dependents |
+|--------|--------------|------------|
+| | | |
+
 ## Testing [REQUIRED]
-<!-- Used by: /plan-fix, /implement -->
+<!-- Used by: /create-automation -->
 
 ### Test Framework & Conventions
-<!-- Which test framework(s) are used, test naming conventions,
-     and where tests live relative to source code. -->
 
 - **Framework:**
 - **Naming convention:**
@@ -87,8 +75,6 @@
 - **Integration test location:**
 
 ### Running Tests
-<!-- Commands to run unit tests, integration tests, and full test suites.
-     Include module-scoped test commands if applicable. -->
 
 ```bash
 # Run all unit tests
@@ -106,7 +92,6 @@
 
 
 ## Coding Conventions [REQUIRED]
-<!-- Used by: /implement, /code-review -->
 
 ### Style & Formatting
 <!-- Linter/formatter config, import ordering, naming conventions. -->
@@ -119,30 +104,30 @@
 
 
 ### Branch Naming
-<!-- Pattern for feature/fix branches, e.g., fix/<issue-id>-<short-description> -->
+<!-- Pattern for feature/fix branches. -->
 
 
 
 ## Contribution Guidelines [REQUIRED]
-<!-- Used by: /send-pr -->
 
 ### PR Process
 <!-- Required reviewers, CI checks that must pass, approval requirements. -->
 
 
 
-### PR Template Location [OPTIONAL]
-<!-- Path to PR template, e.g., .github/PULL_REQUEST_TEMPLATE.md -->
-
-
-
-### Labels & Categories
-<!-- Available labels and when to use each. -->
+### Labels & Categories [OPTIONAL]
 
 | Label | When to use |
 |-------|-------------|
 | | |
 
-## References [OPTIONAL]
-<!-- Links to external docs, wikis, API specs, design docs, or runbooks. -->
+## Documentation Paths [OPTIONAL]
+<!-- Pointers to extended documentation. Skills and Claude will use these to navigate. -->
 
+| Document | Path / URL |
+|----------|------------|
+| Architecture docs | |
+| Feature docs | |
+| Deployment guide | |
+| User / API guides | |
+| Contribution guide | |
