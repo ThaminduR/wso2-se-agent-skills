@@ -25,12 +25,11 @@ cd apim-apps/portals/admin/src/main/webapp && npm install && cd -
 Built pack: `product-apim/all-in-one-apim/modules/distribution/product/target/wso2am-4.7.0-SNAPSHOT.zip`
 
 ## Fast product-apim Build (for local testing / reproducing issues)
-IMPORTANT: For local testing, only the all-in-one profile is needed. Build from inside the `all-in-one-apim` directory and skip integration tests:
+IMPORTANT: For local testing, only the all-in-one profile is needed. Build from inside the `all-in-one-apim` directory. You MUST use both `-DskipTests` and `-Dmaven.test.skip=true` — `-DskipTests` alone does NOT prevent integration test modules from starting a full APIM instance:
 ```bash
-cd product-apim/all-in-one-apim && mvn clean install -DskipTests \
-  -pl '!modules/integration'
+cd product-apim/all-in-one-apim && mvn clean install -DskipTests -Dmaven.test.skip=true
 ```
-This builds only the all-in-one distribution and skips integration tests (which spin up a full APIM instance and take 30+ minutes). Use the full `product-apim` root build only when you need gateway/traffic-manager/api-control-plane profiles.
+This builds only the all-in-one distribution (~3 min). Use the full `product-apim` root build only when you need gateway/traffic-manager/api-control-plane profiles.
 
 ## Build with Local Dependencies
 By default product-apim uses released versions, not local builds. To use locally built carbon-apimgt and apim-apps:
