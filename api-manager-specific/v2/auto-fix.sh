@@ -1,12 +1,61 @@
 #!/bin/bash
 set -e
 
-ISSUE_URL="$1"
+usage() {
+  echo "Usage: ./auto-fix.sh [options] <github-issue-url>"
+  echo ""
+  echo "Automated pipeline to reproduce, fix, verify, and submit PRs for GitHub issues."
+  echo ""
+  echo "Steps:"
+  echo "  1. reproduce    Analyze the issue, reproduce the bug, generate issue-analysis artifact"
+  echo "  2. plan-fix     Plan and implement a code fix based on the analysis"
+  echo "  3. verify-fix   Build, patch the product, and verify the fix resolves the issue"
+  echo "  4. submit-fix   Create PRs for the fix and generate a fix report"
+  echo ""
+  echo "Options:"
+  echo "  --steps <steps>   Comma-separated steps to run (default: all)"
+  echo "                    Accepts names or numbers: reproduce,plan-fix or 1,2"
+  echo "  --from <step>     Start from this step onwards (runs all subsequent steps)"
+  echo "  --only <step>     Run only this single step"
+  echo "  -h, --help        Show this help message"
+  echo ""
+  echo "Examples:"
+  echo "  # Run full pipeline"
+  echo "  ./auto-fix.sh https://github.com/wso2/product-apim/issues/12345"
+  echo ""
+  echo "  # Only reproduce the issue"
+  echo "  ./auto-fix.sh --only reproduce https://github.com/wso2/product-apim/issues/12345"
+  echo ""
+  echo "  # Re-run from verify onwards (after manual code changes)"
+  echo "  ./auto-fix.sh --from verify-fix https://github.com/wso2/product-apim/issues/12345"
+  echo ""
+  echo "  # Run specific steps"
+  echo "  ./auto-fix.sh --steps 1,2 https://github.com/wso2/product-apim/issues/12345"
+  echo "  ./auto-fix.sh --steps reproduce,plan-fix https://github.com/wso2/product-apim/issues/12345"
+  echo ""
+  echo "Logs are saved to .ai/logs/ (processed + raw)."
+  echo "Artifacts: .ai/issue-analysis-<number>.md, .ai/fix-report-<number>.md"
+  exit 1
+}
+
+# Parse arguments
+STEPS=""
+FROM_STEP=""
+ISSUE_URL=""
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --steps) STEPS="$2"; shift 2 ;;
+    --from)  FROM_STEP="$2"; shift 2 ;;
+    --only)  STEPS="$2"; shift 2 ;;
+    --help|-h) usage ;;
+    -*) echo "Unknown option: $1"; usage ;;
+    *)  ISSUE_URL="$1"; shift ;;
+  esac
+done
 
 if [ -z "$ISSUE_URL" ]; then
-  echo "Usage: ./auto-fix.sh <github-issue-url>"
-  echo "Example: ./auto-fix.sh https://github.com/wso2/product-apim/issues/12345"
-  exit 1
+  usage
 fi
 
 # Extract issue number from URL
@@ -15,6 +64,42 @@ if [ -z "$ISSUE_NUMBER" ]; then
   echo "Error: Could not extract issue number from URL"
   exit 1
 fi
+
+# Normalize step names (support both names and numbers)
+normalize_step() {
+  case "$1" in
+    1|reproduce)   echo "reproduce" ;;
+    2|plan-fix)    echo "plan-fix" ;;
+    3|verify-fix)  echo "verify-fix" ;;
+    4|submit-fix)  echo "submit-fix" ;;
+    *) echo "Error: Unknown step '$1'. Valid: reproduce, plan-fix, verify-fix, submit-fix (or 1-4)"; exit 1 ;;
+  esac
+}
+
+ALL_STEPS="reproduce plan-fix verify-fix submit-fix"
+
+# Determine which steps to run
+if [ -n "$FROM_STEP" ]; then
+  FROM_STEP=$(normalize_step "$FROM_STEP")
+  RUN_STEPS=""
+  found=false
+  for s in $ALL_STEPS; do
+    if [ "$s" = "$FROM_STEP" ]; then found=true; fi
+    if $found; then RUN_STEPS="$RUN_STEPS $s"; fi
+  done
+elif [ -n "$STEPS" ]; then
+  RUN_STEPS=""
+  IFS=',' read -ra PARTS <<< "$STEPS"
+  for part in "${PARTS[@]}"; do
+    RUN_STEPS="$RUN_STEPS $(normalize_step "$(echo "$part" | xargs)")"
+  done
+else
+  RUN_STEPS="$ALL_STEPS"
+fi
+
+should_run() {
+  echo "$RUN_STEPS" | grep -qw "$1"
+}
 
 # Create logs directory
 LOG_DIR=".ai/logs"
@@ -30,7 +115,9 @@ run_claude_streaming() {
   shift
   local prompt="$*"
 
+  local raw_log_file="${log_file%.log}-raw.log"
   export LOG_FILE="$log_file"
+  export RAW_LOG_FILE="$raw_log_file"
   claude -p "$prompt" \
     --output-format stream-json --verbose --include-partial-messages \
     --dangerously-skip-permissions 2>&1 \
@@ -38,7 +125,9 @@ run_claude_streaming() {
 import sys, json, os
 
 log_file = os.environ.get('LOG_FILE', '/dev/null')
+raw_log_file = os.environ.get('RAW_LOG_FILE', '/dev/null')
 f = open(log_file, 'w')
+raw_f = open(raw_log_file, 'w')
 
 # ANSI colors
 C_RESET = '\033[0m'
@@ -77,6 +166,9 @@ def out_partial(text):
 in_thinking = False
 
 for line in sys.stdin:
+    # Write raw unprocessed line to raw log
+    raw_f.write(line)
+    raw_f.flush()
     line = line.strip()
     if not line:
         continue
@@ -161,10 +253,7 @@ for line in sys.stdin:
                         for tline in thinking_text.split('\n'):
                             tline = tline.strip()
                             if tline:
-                                summary = tline[:150]
-                                if len(tline) > 150:
-                                    summary += '...'
-                                out(C_THINKING + '[thinking] ' + summary + C_RESET)
+                                out(C_THINKING + '[thinking] ' + tline + C_RESET)
                                 break
 
         elif msg_type == 'result':
@@ -176,55 +265,63 @@ for line in sys.stdin:
         pass
 
 f.close()
+raw_f.close()
 "
 }
 
 echo "=== Auto Fix Pipeline ==="
 echo "Issue: $ISSUE_URL (#$ISSUE_NUMBER)"
+echo "Steps: $RUN_STEPS"
 echo "Logs: $LOG_DIR/issue-${ISSUE_NUMBER}-*.log"
 echo ""
 
 # Step 1: Reproduce
-STEP1_LOG="$LOG_DIR/issue-${ISSUE_NUMBER}-1-reproduce-${TIMESTAMP}.log"
-echo "=== [1/4] Reproducing issue... ==="
-echo "  Log: $STEP1_LOG"
-run_claude_streaming "$STEP1_LOG" "/reproduce $ISSUE_URL"
-if [ ! -f ".ai/issue-analysis-${ISSUE_NUMBER}.md" ]; then
-  echo "Error: Reproduction failed — no issue analysis artifact found."
-  exit 1
+if should_run "reproduce"; then
+  STEP1_LOG="$LOG_DIR/issue-${ISSUE_NUMBER}-1-reproduce-${TIMESTAMP}.log"
+  echo "=== [1/4] Reproducing issue... ==="
+  echo "  Log: $STEP1_LOG"
+  run_claude_streaming "$STEP1_LOG" "/reproduce $ISSUE_URL"
+  if [ ! -f ".ai/issue-analysis-${ISSUE_NUMBER}.md" ]; then
+    echo "Error: Reproduction failed — no issue analysis artifact found."
+    exit 1
+  fi
+  echo ""
+  echo "=== Reproduction complete ==="
+  echo ""
 fi
-echo ""
-echo "=== Reproduction complete ==="
-echo ""
 
 # Step 2: Plan and fix
-STEP2_LOG="$LOG_DIR/issue-${ISSUE_NUMBER}-2-plan-fix-${TIMESTAMP}.log"
-echo "=== [2/4] Planning and implementing fix... ==="
-echo "  Log: $STEP2_LOG"
-run_claude_streaming "$STEP2_LOG" "/plan-fix $ISSUE_NUMBER"
-echo ""
-echo "=== Fix implemented ==="
-echo ""
+if should_run "plan-fix"; then
+  STEP2_LOG="$LOG_DIR/issue-${ISSUE_NUMBER}-2-plan-fix-${TIMESTAMP}.log"
+  echo "=== [2/4] Planning and implementing fix... ==="
+  echo "  Log: $STEP2_LOG"
+  run_claude_streaming "$STEP2_LOG" "/plan-fix $ISSUE_NUMBER"
+  echo ""
+  echo "=== Fix implemented ==="
+  echo ""
+fi
 
 # Step 3: Verify fix
-STEP3_LOG="$LOG_DIR/issue-${ISSUE_NUMBER}-3-verify-fix-${TIMESTAMP}.log"
-echo "=== [3/4] Verifying fix... ==="
-echo "  Log: $STEP3_LOG"
-run_claude_streaming "$STEP3_LOG" "/verify-fix $ISSUE_URL"
-echo ""
-echo "=== Verification complete ==="
-echo ""
+if should_run "verify-fix"; then
+  STEP3_LOG="$LOG_DIR/issue-${ISSUE_NUMBER}-3-verify-fix-${TIMESTAMP}.log"
+  echo "=== [3/4] Verifying fix... ==="
+  echo "  Log: $STEP3_LOG"
+  run_claude_streaming "$STEP3_LOG" "/verify-fix $ISSUE_URL"
+  echo ""
+  echo "=== Verification complete ==="
+  echo ""
+fi
 
 # Step 4: Submit fix
-STEP4_LOG="$LOG_DIR/issue-${ISSUE_NUMBER}-4-submit-fix-${TIMESTAMP}.log"
-echo "=== [4/4] Submitting PRs... ==="
-echo "  Log: $STEP4_LOG"
-run_claude_streaming "$STEP4_LOG" "/submit-fix $ISSUE_NUMBER"
-echo ""
-echo "=== PRs submitted ==="
-echo ""
+if should_run "submit-fix"; then
+  STEP4_LOG="$LOG_DIR/issue-${ISSUE_NUMBER}-4-submit-fix-${TIMESTAMP}.log"
+  echo "=== [4/4] Submitting PRs... ==="
+  echo "  Log: $STEP4_LOG"
+  run_claude_streaming "$STEP4_LOG" "/submit-fix $ISSUE_NUMBER"
+  echo ""
+  echo "=== PRs submitted ==="
+  echo ""
+fi
 
 echo "=== Pipeline complete ==="
-echo "Check .ai/issue-analysis-${ISSUE_NUMBER}.md for reproduction details"
-echo "Check .ai/fix-report-${ISSUE_NUMBER}.md for PR links"
 echo "Logs saved in $LOG_DIR/issue-${ISSUE_NUMBER}-*-${TIMESTAMP}.log"
