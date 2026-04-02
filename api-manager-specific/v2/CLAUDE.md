@@ -100,13 +100,25 @@ The naming convention differs between source and pack:
 **ALWAYS start from a fresh pack.** Do NOT try to restart a running server in-place. Kill the old server, delete the extracted pack, re-extract, apply patches, and start fresh.
 
 ```bash
-# 1. Kill any running server
-PID=$(cat wso2am-<version>/wso2carbon.pid 2>/dev/null || ps aux | grep 'wso2carbon' | grep -v grep | awk '{print $2}')
-if [ -n "$PID" ]; then
-  kill "$PID" 2>/dev/null
-  while kill -0 "$PID" 2>/dev/null; do sleep 2; done
-  echo "Server stopped."
-fi
+# 1. Kill ALL running WSO2 server processes (not just the one from the PID file)
+# The PID file may be stale or missing — always check for actual java processes too.
+for PID in $(cat wso2am-*/wso2carbon.pid 2>/dev/null; ps aux | grep 'org.wso2.carbon.bootstrap.Bootstrap' | grep -v grep | awk '{print $2}'); do
+  if kill -0 "$PID" 2>/dev/null; then
+    echo "Killing WSO2 server process $PID..."
+    kill "$PID" 2>/dev/null
+    while kill -0 "$PID" 2>/dev/null; do sleep 2; done
+  fi
+done
+# Verify critical ports are free (9443+offset, 9763+offset, 8280+offset, 8243+offset, 5672)
+for PORT in 9443 9763 8280 8243 5672; do
+  PORT_PID=$(lsof -ti :$PORT 2>/dev/null)
+  if [ -n "$PORT_PID" ]; then
+    echo "WARNING: Port $PORT still in use by PID $PORT_PID — killing it."
+    kill "$PORT_PID" 2>/dev/null
+    sleep 2
+  fi
+done
+echo "All servers stopped and ports free."
 
 # 2. Delete old extracted pack and re-extract
 rm -rf wso2am-<version>
@@ -125,13 +137,27 @@ cp target/<module>_<version>.jar wso2am-<version>/repository/components/patches/
 # 6. Start from the bin directory (you MUST cd into bin/)
 cd wso2am-<version>/bin && sh api-manager.sh &
 
-# 7. Poll the log for startup (up to 3 minutes)
+# 7. Poll the log for startup (up to 3 minutes), with failure detection
 LOG_FILE="wso2am-<version>/repository/logs/wso2carbon.log"
+SERVER_PID=$!
 for i in $(seq 1 36); do
+  # Check if server process is still alive
+  if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+    echo "ERROR: Server process died. Check log for errors:"
+    grep -i "BindException\|Address already in use\|Shutdown complete\|Halting JVM\|FATAL\|Could not bind" "$LOG_FILE" | tail -5
+    exit 1
+  fi
+  # Check for successful startup
   if grep -q "Mgt Console URL" "$LOG_FILE" 2>/dev/null; then
     echo "Server started!"
     grep "Mgt Console URL" "$LOG_FILE"
     break
+  fi
+  # Check for known fatal errors in the log (server may still be shutting down)
+  if grep -q "Halting JVM\|Shutdown complete" "$LOG_FILE" 2>/dev/null; then
+    echo "ERROR: Server failed to start. Check log for errors:"
+    grep -i "BindException\|Address already in use\|Could not bind\|FATAL\|Exception" "$LOG_FILE" | tail -10
+    exit 1
   fi
   sleep 5
 done
@@ -141,7 +167,10 @@ done
 - NEVER try to restart a running server — always kill, delete, re-extract, patch, and start fresh.
 - NEVER redirect server output to `/dev/null` — let it write to the log file naturally.
 - NEVER count occurrences of "WSO2 Carbon started" — just grep a fresh log for `"Mgt Console URL"`.
-- If the loop finishes without finding the line, check `tail -30 "$LOG_FILE"` for errors.
+- ALWAYS check if the server process is still alive during polling — if it died, check the log for errors and exit immediately. Common failures: `Address already in use`, `BindException`, `Could not bind`.
+- If a port conflict is detected, find what's using the port (`lsof -i :<port>`) and either kill it or increase the port offset.
+- **IMPORTANT: The start command (step 6) and the poll loop (step 7) MUST be in the SAME Bash tool call.** If you split them into separate Bash calls, `$!` won't capture the server PID. Also set `timeout: 200000` on the Bash tool call so it doesn't time out before the server starts.
+- **NEVER poll for startup in a separate Bash call from the start command.** The server start and the polling loop must always be a single Bash invocation.
 
 ### For WAR files (REST API changes)
 
