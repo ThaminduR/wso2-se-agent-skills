@@ -17,7 +17,16 @@ Read `.ai/issue-analysis-<issue_number>.md` for the issue context.
 2. **For each changed repo:**
    - Create a branch named `fix/<issue_number>` (or similar).
    - Commit the changes with a message referencing the issue.
-   - Push the branch and create a PR to the repo's main branch using `gh pr create`.
+   - Push the branch to `origin` (the fork): `git push -u origin fix/<issue_number>`.
+   - Create the PR **against the upstream repo**, not the fork. Use:
+     ```
+     gh pr create --repo <upstream-org>/<upstream-repo> --head <fork-owner>:fix/<issue_number> --base master
+     ```
+     To find the upstream repo, check `git remote get-url upstream`. The fork owner comes from `git remote get-url origin`.
+     For example, if origin is `Tharsanan1/carbon-apimgt-wso2` and upstream is `wso2/carbon-apimgt`:
+     ```
+     gh pr create --repo wso2/carbon-apimgt --head Tharsanan1:fix/4863 --base master
+     ```
 3. **Write the fix report** to `.ai/fix-report-<issue_number>.md`:
 
 ```markdown

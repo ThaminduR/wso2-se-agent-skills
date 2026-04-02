@@ -100,22 +100,57 @@ The naming convention differs between source and pack:
 **ALWAYS start from a fresh pack.** Do NOT try to restart a running server in-place. Kill the old server, delete the extracted pack, re-extract, apply patches, and start fresh.
 
 ```bash
-# 1. Kill ALL running WSO2 server processes (not just the one from the PID file)
-# The PID file may be stale or missing — always check for actual java processes too.
-for PID in $(cat wso2am-*/wso2carbon.pid 2>/dev/null; ps aux | grep 'org.wso2.carbon.bootstrap.Bootstrap' | grep -v grep | awk '{print $2}'); do
-  if kill -0 "$PID" 2>/dev/null; then
-    echo "Killing WSO2 server process $PID..."
-    kill "$PID" 2>/dev/null
-    while kill -0 "$PID" 2>/dev/null; do sleep 2; done
+# 1. Stop ALL running WSO2 server instances
+# Step A: Use the built-in --stop command (graceful shutdown via PID file)
+for PACK_DIR in wso2am-*/; do
+  if [ -f "$PACK_DIR/wso2carbon.pid" ]; then
+    echo "Stopping server in $PACK_DIR using --stop..."
+    cd "$PACK_DIR/bin" && sh api-manager.sh --stop 2>/dev/null; cd - > /dev/null
   fi
 done
-# Verify critical ports are free (9443+offset, 9763+offset, 8280+offset, 8243+offset, 5672)
-for PORT in 9443 9763 8280 8243 5672; do
+
+# Step B: Wait for the process to actually die (--stop sends SIGTERM but doesn't wait)
+for PID in $(cat wso2am-*/wso2carbon.pid 2>/dev/null); do
+  if kill -0 "$PID" 2>/dev/null; then
+    echo "Waiting for PID $PID to exit..."
+    WAIT=0
+    while kill -0 "$PID" 2>/dev/null && [ $WAIT -lt 30 ]; do
+      sleep 2; WAIT=$((WAIT+2))
+    done
+    # Force kill if still alive after 30s
+    if kill -0 "$PID" 2>/dev/null; then
+      echo "Force killing PID $PID..."
+      kill -9 "$PID" 2>/dev/null
+    fi
+  fi
+done
+
+# Step C: Catch any orphaned WSO2 java processes (stale PID file, missing PID file, etc.)
+for PID in $(ps aux | grep 'org.wso2.carbon.bootstrap.Bootstrap' | grep -v grep | awk '{print $2}'); do
+  echo "Killing orphaned WSO2 process $PID..."
+  kill "$PID" 2>/dev/null
+  sleep 3
+  kill -9 "$PID" 2>/dev/null 2>&1
+done
+
+# Step D: Verify critical ports are free (accounting for port offset)
+# Read offset from any existing pack's deployment.toml, default to 0
+OFFSET=0
+for TOML in wso2am-*/repository/conf/deployment.toml; do
+  if [ -f "$TOML" ]; then
+    FOUND_OFFSET=$(grep -A1 '^\[server\]' "$TOML" | grep 'offset' | grep -oE '[0-9]+')
+    if [ -n "$FOUND_OFFSET" ]; then OFFSET=$FOUND_OFFSET; fi
+    break
+  fi
+done
+echo "Using port offset: $OFFSET"
+for BASE_PORT in 9443 9763 8280 8243 5672; do
+  PORT=$((BASE_PORT + OFFSET))
   PORT_PID=$(lsof -ti :$PORT 2>/dev/null)
   if [ -n "$PORT_PID" ]; then
-    echo "WARNING: Port $PORT still in use by PID $PORT_PID — killing it."
-    kill "$PORT_PID" 2>/dev/null
-    sleep 2
+    echo "WARNING: Port $PORT still in use by PID $PORT_PID — force killing."
+    kill -9 "$PORT_PID" 2>/dev/null
+    sleep 1
   fi
 done
 echo "All servers stopped and ports free."
