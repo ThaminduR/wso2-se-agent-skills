@@ -75,9 +75,53 @@ ls wso2am-<version>/repository/components/plugins/ | grep <module-name>
       wso2am-<version>/repository/components/patches/patch9999/org.wso2.carbon.apimgt.impl_9.33.65.jar
    ```
 
-### Step 4: Restart the server
+### Step 4: Fresh start with patches
 
-Stop the running server and start it again. The patch will be picked up automatically on startup.
+**ALWAYS start from a fresh pack.** Do NOT try to restart a running server in-place. Kill the old server, delete the extracted pack, re-extract, apply patches, and start fresh.
+
+```bash
+# 1. Kill any running server
+PID=$(cat wso2am-<version>/wso2carbon.pid 2>/dev/null || ps aux | grep 'wso2carbon' | grep -v grep | awk '{print $2}')
+if [ -n "$PID" ]; then
+  kill "$PID" 2>/dev/null
+  while kill -0 "$PID" 2>/dev/null; do sleep 2; done
+  echo "Server stopped."
+fi
+
+# 2. Delete old extracted pack and re-extract
+rm -rf wso2am-<version>
+unzip -q wso2am-<version>.zip
+
+# 3. Re-apply port offset if needed (check with: lsof -i :9443)
+# Edit wso2am-<version>/repository/conf/deployment.toml BEFORE first start
+
+# 4. Apply JAR patches
+mkdir -p wso2am-<version>/repository/components/patches/patch9999/
+cp target/<module>_<version>.jar wso2am-<version>/repository/components/patches/patch9999/
+
+# 5. Apply WAR patches (if any REST API changes)
+# cp target/<war-file>.war wso2am-<version>/repository/deployment/server/webapps/
+
+# 6. Start from the bin directory (you MUST cd into bin/)
+cd wso2am-<version>/bin && sh api-manager.sh &
+
+# 7. Poll the log for startup (up to 3 minutes)
+LOG_FILE="wso2am-<version>/repository/logs/wso2carbon.log"
+for i in $(seq 1 36); do
+  if grep -q "Mgt Console URL" "$LOG_FILE" 2>/dev/null; then
+    echo "Server started!"
+    grep "Mgt Console URL" "$LOG_FILE"
+    break
+  fi
+  sleep 5
+done
+```
+
+**Rules:**
+- NEVER try to restart a running server — always kill, delete, re-extract, patch, and start fresh.
+- NEVER redirect server output to `/dev/null` — let it write to the log file naturally.
+- NEVER count occurrences of "WSO2 Carbon started" — just grep a fresh log for `"Mgt Console URL"`.
+- If the loop finishes without finding the line, check `tail -30 "$LOG_FILE"` for errors.
 
 ### For WAR files (REST API changes)
 
@@ -85,4 +129,4 @@ If changes are in a REST API module (e.g., `org.wso2.carbon.apimgt.rest.api.publ
 ```
 wso2am-<version>/repository/deployment/server/webapps/
 ```
-Replace the corresponding war file and delete its expanded directory if present, then restart.
+Include the WAR copy in step 5 above when starting from a fresh pack.
