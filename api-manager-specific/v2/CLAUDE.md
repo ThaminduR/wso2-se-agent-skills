@@ -2,7 +2,7 @@
 
 ## Product Pack
 
-A pre-built product pack is available in the workspace as `wso2am-4.7.0-alpha.zip`. Use this pack to reproduce issues.
+A pre-built product pack is available in the workspace as `wso2am-<version>.zip`. Use this pack to reproduce issues.
 
 ## Starting the Product
 
