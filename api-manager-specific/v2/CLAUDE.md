@@ -34,16 +34,41 @@ A pre-built product pack is available in the workspace as `wso2am-4.7.0-alpha.zi
 
 When code changes have been made in `carbon-apimgt` (or similar source repos), you need to build the changed module and patch the running product pack. Do NOT rebuild the entire product.
 
-### Step 1: Build the changed module
+### Step 1: Checkout the matching source version
+
+**CRITICAL**: Before making any code changes, you MUST checkout the source repo to the exact version that matches the jar in the product pack. If the versions don't match, the patched jar will be incompatible and the server will fail.
+
+1. Find the version of the jar in the pack:
+   ```bash
+   ls wso2am-<version>/repository/components/plugins/ | grep <module-name>
+   # Example output: org.wso2.carbon.apimgt.impl_9.33.65.jar
+   # The version is 9.33.65
+   ```
+
+2. Find the matching tag in the source repo:
+   ```bash
+   cd carbon-apimgt
+   git tag | grep "9.33.65"
+   # Example output: v9.33.65
+   ```
+
+3. Checkout that tag and create a working branch:
+   ```bash
+   git checkout v9.33.65 -b fix/issue-<number>
+   ```
+
+4. Now make your code changes on this branch.
+
+### Step 2: Build the changed module
 
 Navigate to the changed module directory and build:
 ```
 cd carbon-apimgt/components/apimgt/<module-name>
 mvn clean install -Dmaven.test.skip=true
 ```
-The built jar will be in the module's `target/` directory.
+The built jar will be in the module's `target/` directory. The version in the built jar (e.g., `9.33.65-SNAPSHOT`) must match the version in the pack (e.g., `9.33.65`). If they don't match, you checked out the wrong tag — go back to Step 1.
 
-### Step 2: Identify the corresponding jar in the product pack
+### Step 3: Identify the corresponding jar in the product pack
 
 JAR files live in:
 ```
@@ -52,11 +77,6 @@ wso2am-<version>/repository/components/plugins/
 The naming convention differs between source and pack:
 - **Source artifact**: `org.wso2.carbon.apimgt.gateway-9.33.65-SNAPSHOT.jar` (hyphens, `-SNAPSHOT`)
 - **Pack plugin**: `org.wso2.carbon.apimgt.gateway_9.33.65.jar` (underscore before version, no `-SNAPSHOT`)
-
-Find the matching jar:
-```
-ls wso2am-<version>/repository/components/plugins/ | grep <module-name>
-```
 
 ### Step 3: Create a patch directory and copy the jar
 
