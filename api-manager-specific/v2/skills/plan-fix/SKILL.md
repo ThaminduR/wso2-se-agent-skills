@@ -11,6 +11,8 @@ argument-hint: "[Issue number]"
 
 Read `.ai/issue-analysis-<issue_number>.md` for the root cause analysis and reproduction details.
 
+NOTE: If the analysis artifact say the issue is already fixed or not reproducible, do not proceed with the fix. Report and stop
+
 ## Steps
 
 1. **Identify the target repo** from the issue analysis. If the repo is not already cloned in the current workspace, clone it here.
