@@ -11,6 +11,8 @@ argument-hint: "[Issue number]"
 
 Read `.ai/issue-analysis-<issue_number>.md` for the issue context.
 
+NOTE: If the analysis artifact say the issue is already fixed or not reproducible, do not proceed with the fix. Report and stop
+
 ## Steps
 
 1. **Identify all repos with changes.** Check each repo directory in the workspace for uncommitted or staged changes related to the fix.
