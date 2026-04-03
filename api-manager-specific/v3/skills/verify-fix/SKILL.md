@@ -23,20 +23,29 @@ argument-hint: "[GitHub Issue URL or ID]"
    - Apply any template or WAR patches
    - Start the server
 
-4. **Reproduce** — Follow the reproduction steps from the issue (or from `.ai/issue-analysis-<issue_number>.md` if it exists).
+4. **Verify at runtime** — You MUST actually test the fix against a running product. Checking code diffs, grepping compiled bundles, or confirming "the build succeeded" is NOT verification. You must observe the correct behavior at runtime.
 
-   **For frontend bugs:** Use Playwright to verify the fix — follow the "Interacting with the Frontend (Playwright)" section in CLAUDE.md.
-   - If a reproduction script exists from the reproduce step (`.ai/reproduce-<issue_number>.mjs`), run it — it should now pass (the bug behavior should no longer occur).
+   **For frontend bugs:** Use Playwright — follow the "Interacting with the Frontend (Playwright)" section in CLAUDE.md.
+   - If a reproduction script exists from the reproduce step (`.ai/reproduce-<issue_number>.mjs`), run it — the bug behavior should no longer occur.
    - If no script exists, write one following the Playwright guidelines in CLAUDE.md.
    - Save verification screenshots to `.ai/screenshots/verify/`.
+   - The screenshots must show the **correct behavior** (e.g., an element that was hidden is now visible).
 
-   **For backend bugs:** Use curl or REST API calls.
+   **For backend bugs:** Use curl or REST API calls against the running server.
    - **After deploying APIs/products, immediately check the server log for errors** before attempting invocation:
      ```
      grep -i "error\|exception" wso2am-*/repository/logs/wso2carbon.log | grep -v "JMS\|Siddhi" | tail -10
      ```
    - If deployment errors are found (e.g., Velocity errors, template exceptions), report them immediately — do not proceed to invocation.
    - If deployment is clean, proceed with invocation and compare results.
+
+   **What does NOT count as verification:**
+   - ❌ "The compiled bundle contains the fix logic" — grepping minified JS is not verification
+   - ❌ "The build succeeded" — a successful build only means the code compiles
+   - ❌ "The admin portal loads (HTTP 200)" — this only means the server is running
+   - ✅ Playwright screenshots showing the correct UI behavior after the fix
+   - ✅ curl response showing the correct HTTP status/body after the fix
+   - ✅ Server logs showing no errors where there were errors before
 
 5. **Report** — Create `.ai/fix-verification-report.md`:
 
@@ -45,13 +54,14 @@ argument-hint: "[GitHub Issue URL or ID]"
 
 **Issue**: <url>
 **Verdict**: FIXED | NOT FIXED
+**Verification method**: Playwright / curl / server logs
 
 ## Reproduction Steps Executed
-<what you did>
+<what you did — must be runtime steps, not code analysis>
 
 ## Result
-<what happened>
+<what happened — describe observed runtime behavior>
 
 ## Evidence
-<logs, errors, or output>
+<screenshots from .ai/screenshots/verify/, curl output, or server log excerpts — MUST be from runtime>
 ```

@@ -23,13 +23,34 @@ Determine whether this is a **Bug**, **Feature Request**, **Question**, or **Enh
 
 If setup fails, **report the failure and stop** — do not proceed with a broken environment.
 
-## Step 3: Reproduce the Bug (**THIS IS A MANDATORY STEP**, ALWAYS REPRODUCE THE ISSUE, INSTEAD OF RELYING ON CODE INSPECTION ALONE)
+## Step 3: Reproduce the Bug
 
-1. Follow the reproduction steps from the issue (or infer reasonable steps if not provided).
-2. Use Deployment instructions in the project to execute the reproduction steps.
-3. **If the issue involves frontend, use Playwright to reproduce the issue** — follow the "Interacting with the Frontend (Playwright)" section in CLAUDE.md. Save the reproduction script as `.ai/reproduce-<issue_number>.mjs` so it can be reused by the verify-fix step. **If the issue is backend-only, use curl to reproduce.**
-4. Capture all logs, error output, HTTP responses, and screenshots.
-5. Record expected vs. actual behavior.
+**⚠️ THIS STEP IS MANDATORY. YOU MUST ACTUALLY TRIGGER THE BUG IN A RUNNING PRODUCT.**
+
+**"Reproduction" means observing the bug happen at runtime — NOT reading source code, NOT analyzing logic, NOT grepping compiled output. If you have not seen the actual incorrect behavior with your own eyes (via Playwright screenshots, curl responses, or log output from a running server), you have NOT reproduced the bug. Do not mark it as reproduced.**
+
+**Code inspection is useful for root cause analysis (Step 5), but it is NOT reproduction. You must complete this step before writing any root cause analysis.**
+
+### How to reproduce
+
+1. Start the product server and wait for it to be ready.
+2. Follow the reproduction steps from the issue (or infer reasonable steps if not provided).
+3. Determine whether this is a **frontend** or **backend** issue:
+   - **Frontend issue** (involves UI behavior — clicking, forms, navigation, element visibility, layout, etc.): Use **Playwright** to drive a real browser. Follow the "Interacting with the Frontend (Playwright)" section in CLAUDE.md. Save the script as `.ai/reproduce-<issue_number>.mjs` so verify-fix can reuse it.
+   - **Backend issue** (involves REST API responses, server errors, data processing, etc.): Use **curl** to make real HTTP requests to the running server.
+4. Capture concrete evidence:
+   - **Frontend**: Screenshots at each key step showing the actual buggy behavior.
+   - **Backend**: Full HTTP responses (status code, headers, body), error logs from the server.
+5. Record expected vs. actual behavior **based on what you observed**, not what you read in code.
+
+### What counts as reproduction evidence
+
+- ✅ Playwright screenshot showing a UI element is hidden when it should be visible
+- ✅ curl response showing HTTP 500 when it should be 200
+- ✅ Server log showing an exception during an API call you made
+- ❌ "Code analysis confirms the bug" — this is NOT reproduction
+- ❌ "The logic shows enableDirectToken is never restored" — this is analysis, NOT reproduction
+- ❌ `curl -sk -o /dev/null -w "%{http_code}" <url>` returning 200 — this only proves the page loads, NOT that the bug exists
 
 **REST API reference:** When you need to interact with the product via REST APIs, consult:
 - `docs-apim/en/docs/assets/attachments/reference/` — Postman collections with example payloads and full API lifecycle workflows (create → publish → subscribe → invoke)
@@ -53,14 +74,15 @@ Create the directory `.ai/` at the repo root if it doesn't exist. Write the anal
 - **Affected Feature(s):** [feature names]
 
 ## Reproducibility
-- **Reproducible:** Yes / No
+- **Reproducible:** Yes / No (ONLY "Yes" if you triggered the bug at runtime and observed it. Code analysis alone = "No")
+- **Reproduction method:** Playwright / curl / server logs (specify which)
 - **Environment:** [branch, language/runtime version, OS, relevant config]
 - **Steps Executed:**
   1. [step]
   2. [step]
 - **Expected Behavior:** [what should happen]
-- **Actual Behavior:** [what actually happened]
-- **Logs/Evidence:** [attached or inline]
+- **Actual Behavior:** [what actually happened — describe what you OBSERVED, not what you read in code]
+- **Evidence:** [screenshots from .ai/screenshots/, curl output, or server log excerpts — MUST be from runtime, not code]
 
 ## Root Cause Analysis
 Brief analysis of what is likely causing the bug based on reproduction results.
