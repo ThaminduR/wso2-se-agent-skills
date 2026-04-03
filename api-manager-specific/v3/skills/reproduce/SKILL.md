@@ -23,12 +23,12 @@ Determine whether this is a **Bug**, **Feature Request**, **Question**, or **Enh
 
 If setup fails, **report the failure and stop** — do not proceed with a broken environment.
 
-## Step 3: Reproduce the Bug (**THIS IS A MANDATORY STEP**, ALWAYS REPRODUCE THS ISSUE, INSTEAD OF RELYING ON CODE INSPECTION ALONE)
+## Step 3: Reproduce the Bug (**THIS IS A MANDATORY STEP**, ALWAYS REPRODUCE THE ISSUE, INSTEAD OF RELYING ON CODE INSPECTION ALONE)
 
 1. Follow the reproduction steps from the issue (or infer reasonable steps if not provided).
 2. Use Deployment instructions in the project to execute the reproduction steps.
-3. **If the issue involves frontend, use the frontend to reproduce the issue**. **If the issue is involving only backend, then you can run the backend and use curl to reproduce the issue**.
-4. Capture all logs, error output, and HTTP responses.
+3. **If the issue involves frontend, use Playwright to reproduce the issue** — follow the "Interacting with the Frontend (Playwright)" section in CLAUDE.md. Save the reproduction script as `.ai/reproduce-<issue_number>.mjs` so it can be reused by the verify-fix step. **If the issue is backend-only, use curl to reproduce.**
+4. Capture all logs, error output, HTTP responses, and screenshots.
 5. Record expected vs. actual behavior.
 
 **REST API reference:** When you need to interact with the product via REST APIs, consult:

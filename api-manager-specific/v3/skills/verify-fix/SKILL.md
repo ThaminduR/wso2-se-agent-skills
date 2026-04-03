@@ -24,6 +24,13 @@ argument-hint: "[GitHub Issue URL or ID]"
    - Start the server
 
 4. **Reproduce** — Follow the reproduction steps from the issue (or from `.ai/issue-analysis-<issue_number>.md` if it exists).
+
+   **For frontend bugs:** Use Playwright to verify the fix — follow the "Interacting with the Frontend (Playwright)" section in CLAUDE.md.
+   - If a reproduction script exists from the reproduce step (`.ai/reproduce-<issue_number>.mjs`), run it — it should now pass (the bug behavior should no longer occur).
+   - If no script exists, write one following the Playwright guidelines in CLAUDE.md.
+   - Save verification screenshots to `.ai/screenshots/verify/`.
+
+   **For backend bugs:** Use curl or REST API calls.
    - **After deploying APIs/products, immediately check the server log for errors** before attempting invocation:
      ```
      grep -i "error\|exception" wso2am-*/repository/logs/wso2carbon.log | grep -v "JMS\|Siddhi" | tail -10

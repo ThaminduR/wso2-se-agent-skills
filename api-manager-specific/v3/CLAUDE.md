@@ -64,6 +64,68 @@ For API Products, the flow is the same but use `/api/am/publisher/v4/api-product
 - **OpenAPI specs**: `docs-apim/en/docs/reference/product-apis/publisher-apis/publisher-v4/publisher-v4.yaml`
 - **Product documentation**: `docs-apim/en/docs/` (covers API creation, AI APIs, API Products, subscriptions, etc.)
 
+## Interacting with the Frontend (Playwright)
+
+For any task that requires interacting with the product's web UI (reproducing frontend bugs, verifying frontend fixes, testing UI behavior), use **Playwright** to automate browser interactions. Do NOT rely on code analysis or curl alone for frontend issues — you must actually drive the browser.
+
+### Setup
+
+If Playwright browsers are not installed, run this first:
+```bash
+npx playwright install chromium
+```
+
+### Writing a Playwright Script
+
+Write standalone Node.js scripts (`.mjs` files) that automate the browser interaction:
+
+```javascript
+import { chromium } from 'playwright';
+
+const browser = await chromium.launch({ headless: true });
+const context = await browser.newContext({ ignoreHTTPSErrors: true });
+const page = await context.newPage();
+
+try {
+    // Login to admin portal (example)
+    await page.goto('https://localhost:9443/admin');
+    // ... wait for redirects, fill login form, etc.
+
+    // Perform steps
+    await page.screenshot({ path: '.ai/screenshots/step-1.png' });
+
+    // Assert behavior
+    const element = await page.locator('selector');
+    const isVisible = await element.isVisible();
+    console.log('Element visible:', isVisible);
+
+    await page.screenshot({ path: '.ai/screenshots/step-2.png' });
+} finally {
+    await browser.close();
+}
+```
+
+### Important Rules
+
+- **Always use `headless: true`** — there is no display available.
+- **Always set `ignoreHTTPSErrors: true`** — the product uses self-signed certificates.
+- **Save screenshots** to `.ai/screenshots/` (create the directory with `mkdir -p .ai/screenshots` first). Take screenshots at each key step — they serve as evidence for reproduction and verification.
+- **Login handling:** The portals (admin, publisher, devportal) redirect to an SSO login page. After `page.goto(portalUrl)`, wait for the login form, fill in `admin`/`admin`, and submit. Then wait for the redirect back to the portal.
+- **Wait for elements** rather than using fixed sleeps: use `page.waitForSelector()`, `page.locator().waitFor()`, or `expect(locator).toBeVisible()`.
+- **Log assertions clearly** — print what was expected vs what was found so the output is useful in analysis artifacts.
+
+### When to Use Playwright
+
+- **Reproducing frontend bugs:** Write a script that follows the issue's reproduction steps and captures the buggy behavior.
+- **Verifying frontend fixes:** Run the reproduction script against the patched product — the bug should no longer occur.
+- **Any UI interaction:** Clicking buttons, filling forms, navigating between pages, checking element visibility/state.
+
+### When NOT to Use Playwright
+
+- Backend-only bugs (use curl / REST APIs instead).
+- Checking if a server started (use log polling).
+- Verifying build output (check source diffs or run the product).
+
 ## Patching the Product (Verify Fix)
 
 When code changes have been made in `carbon-apimgt` (or similar source repos), you need to build the changed module and patch the running product pack. Do NOT rebuild the entire product.
