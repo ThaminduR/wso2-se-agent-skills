@@ -246,15 +246,12 @@ for line in sys.stdin:
                         out('')
 
                 elif block.get('type') == 'thinking':
-                    # Show thinking summary — first meaningful line, truncated
                     thinking_text = block.get('thinking', '').strip()
                     if thinking_text:
-                        # Pick first non-empty line
                         for tline in thinking_text.split('\n'):
                             tline = tline.strip()
                             if tline:
                                 out(C_THINKING + '[thinking] ' + tline + C_RESET)
-                                break
 
         elif msg_type == 'result':
             result = obj.get('result', '')
