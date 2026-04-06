@@ -62,3 +62,8 @@ argument-hint: "[GitHub Issue URL or ID]"
 ## Evidence
 <screenshots from .ai/screenshots/verify/, curl output, or server log excerpts — MUST be from runtime>
 ```
+
+## Important Rules
+
+- **Server startup:** The start command and the log polling loop MUST be in the same Bash tool call with `timeout: 200000`. Do not split them into separate calls.
+- **Playwright best practices:** Wait for elements rather than using fixed sleeps (`page.waitForSelector()`, `page.locator().waitFor()`). Log assertions clearly — print expected vs actual so the output is useful in artifacts.

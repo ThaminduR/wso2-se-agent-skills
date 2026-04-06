@@ -103,3 +103,5 @@ Brief analysis of what is likely causing the bug based on reproduction results.
 
 - **Never guess.** If you encounter ambiguity you cannot resolve from available documents, stop and ask the developer.
 - **Artifacts over memory.** The output artifact must be complete enough for a different agent to pick up where you left off.
+- **Server startup:** The start command and the log polling loop MUST be in the same Bash tool call with `timeout: 200000`. Do not split them into separate calls.
+- **Playwright best practices:** Wait for elements rather than using fixed sleeps (`page.waitForSelector()`, `page.locator().waitFor()`). Log assertions clearly — print expected vs actual so the output is useful in artifacts.

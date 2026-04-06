@@ -111,20 +111,6 @@ try {
 - **Always set `ignoreHTTPSErrors: true`** — the product uses self-signed certificates.
 - **Save screenshots** to `.ai/screenshots/` (create the directory with `mkdir -p .ai/screenshots` first). Take screenshots at each key step — they serve as evidence for reproduction and verification.
 - **Login handling:** The portals (admin, publisher, devportal) redirect to an SSO login page. After `page.goto(portalUrl)`, wait for the login form, fill in `admin`/`admin`, and submit. Then wait for the redirect back to the portal.
-- **Wait for elements** rather than using fixed sleeps: use `page.waitForSelector()`, `page.locator().waitFor()`, or `expect(locator).toBeVisible()`.
-- **Log assertions clearly** — print what was expected vs what was found so the output is useful in analysis artifacts.
-
-### When to Use Playwright
-
-- **Reproducing frontend bugs:** Write a script that follows the issue's reproduction steps and captures the buggy behavior.
-- **Verifying frontend fixes:** Run the reproduction script against the patched product — the bug should no longer occur.
-- **Any UI interaction:** Clicking buttons, filling forms, navigating between pages, checking element visibility/state.
-
-### When NOT to Use Playwright
-
-- Backend-only bugs (use curl / REST APIs instead).
-- Checking if a server started (use log polling).
-- Verifying build output (check source diffs or run the product).
 
 ## Patching the Product (Verify Fix)
 
@@ -300,8 +286,6 @@ done
 - NEVER count occurrences of "WSO2 Carbon started" — just grep a fresh log for `"Mgt Console URL"`.
 - ALWAYS check if the server process is still alive during polling — if it died, check the log for errors and exit immediately. Common failures: `Address already in use`, `BindException`, `Could not bind`.
 - If a port conflict is detected, find what's using the port (`lsof -i :<port>`) and either kill it or increase the port offset.
-- **IMPORTANT: The start command (step 6) and the poll loop (step 7) MUST be in the SAME Bash tool call.** If you split them into separate Bash calls, `$!` won't capture the server PID. Also set `timeout: 200000` on the Bash tool call so it doesn't time out before the server starts.
-- **NEVER poll for startup in a separate Bash call from the start command.** The server start and the polling loop must always be a single Bash invocation.
 
 ### For WAR files (REST API changes)
 

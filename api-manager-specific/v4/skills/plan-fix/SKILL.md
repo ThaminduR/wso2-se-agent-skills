@@ -29,7 +29,7 @@ NOTE: If the analysis artifact say the issue is already fixed or not reproducibl
 
 5. **Build the changed module** to verify it compiles: `mvn clean install -Dmaven.test.skip=true`
 
-6. **Dev test** — Patch the product pack and verify the fix works. Follow the patching instructions in CLAUDE.md (extract fresh pack, apply JAR/template patches, start server). Reproduce the issue and confirm the fix resolves it.
+6. **Dev test** — Patch the product pack and verify the fix works. Follow the patching instructions in CLAUDE.md (extract fresh pack, apply JAR/template patches, start server). The start command and log polling MUST be in the same Bash tool call with `timeout: 200000`. Reproduce the issue and confirm the fix resolves it.
    - If the test **passes**: you're done — report success.
    - If the test **fails**: analyze the failure, fix the code, rebuild, and test again. Each iteration should make **forward progress** (fixing a different/new problem). If you find yourself retrying the same failure without a clear code change to address it, stop and report what you found.
 
