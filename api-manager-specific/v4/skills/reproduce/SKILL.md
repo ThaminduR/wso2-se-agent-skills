@@ -36,7 +36,7 @@ If setup fails, **report the failure and stop**
 1. Start the product server and wait for it to be ready.
 2. Follow the reproduction steps from the issue (or infer reasonable steps if not provided).
 3. Determine whether this is a **frontend** or **backend** issue:
-   - **Frontend issue** (involves UI behavior — clicking, forms, navigation): Use **Playwright** to drive a real browser. Save the script as `.ai/reproduce-<issue_number>.md` so verify-fix can reuse it. Refer CLAUDE.md for Playwright guides.
+   - **Frontend issue** (involves UI behavior — clicking, forms, navigation): Use **Playwright** to drive a real browser. Save the script as `.ai/reproduce-<issue_number>.mjs` so verify-fix can reuse it. Refer CLAUDE.md for Playwright guides.
    - **Backend issue** (involves REST API responses, server errors): Use **curl** to make real HTTP requests to the running server.
 4. Capture concrete evidence:
    - **Frontend**: Screenshots at each key step showing the actual buggy behavior.

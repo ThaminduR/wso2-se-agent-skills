@@ -21,7 +21,7 @@ argument-hint: "[GitHub Issue URL or ID]"
 4. **Verify at runtime** — You MUST actually test the fix against a running product. Checking code diffs, grepping compiled bundles, or confirming "the build succeeded" is NOT verification. You must observe the correct behavior at runtime.
 
    **For frontend bugs:** Use Playwright — follow the "Interacting with the Frontend (Playwright)" section in CLAUDE.md.
-   - If a reproduction script exists from the reproduce step (`.ai/reproduce-<issue_number>.md`), run it — the bug behavior should no longer occur.
+   - If a reproduction script exists from the reproduce step (`.ai/reproduce-<issue_number>.mjs`), run it — the bug behavior should no longer occur.
    - If no script exists, write one following the Playwright guidelines in CLAUDE.md.
    - Save verification screenshots to `.ai/screenshots-<issue_number>/verify/`.
    - The screenshots must show the **correct behavior** (e.g., an element that was hidden is now visible).
