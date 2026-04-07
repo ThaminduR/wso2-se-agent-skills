@@ -7,10 +7,11 @@ usage() {
   echo "Automated pipeline to reproduce, fix, verify, and submit PRs for GitHub issues."
   echo ""
   echo "Steps:"
-  echo "  1. reproduce    Analyze the issue, reproduce the bug, generate issue-analysis artifact"
-  echo "  2. plan-fix     Plan and implement a code fix based on the analysis"
-  echo "  3. verify-fix   Build, patch the product, and verify the fix resolves the issue"
-  echo "  4. submit-fix   Create PRs for the fix and generate a fix report"
+  echo "  1. reproduce      Analyze the issue, reproduce the bug, generate issue-analysis artifact"
+  echo "  2. plan-fix       Plan and implement a code fix based on the analysis"
+  echo "  3. verify-fix     Build, patch the product, and verify the fix resolves the issue"
+  echo "  4. create-tests   Write unit and integration tests for the fix"
+  echo "  5. submit-fix     Create PRs for the fix and generate a fix report"
   echo ""
   echo "Options:"
   echo "  --steps <steps>   Comma-separated steps to run (default: all)"
@@ -34,7 +35,7 @@ usage() {
   echo "  ./auto-fix.sh --steps reproduce,plan-fix https://github.com/wso2/product-apim/issues/12345"
   echo ""
   echo "Logs are saved to .ai/logs/ (processed + raw)."
-  echo "Artifacts: .ai/issue-analysis-<number>.md, .ai/fix-report-<number>.md"
+  echo "Artifacts: .ai/ia-<number>.md, .ai/fix-report-<number>.md"
   exit 1
 }
 
@@ -68,15 +69,16 @@ fi
 # Normalize step names (support both names and numbers)
 normalize_step() {
   case "$1" in
-    1|reproduce)   echo "reproduce" ;;
-    2|plan-fix)    echo "plan-fix" ;;
-    3|verify-fix)  echo "verify-fix" ;;
-    4|submit-fix)  echo "submit-fix" ;;
-    *) echo "Error: Unknown step '$1'. Valid: reproduce, plan-fix, verify-fix, submit-fix (or 1-4)"; exit 1 ;;
+    1|reproduce)     echo "reproduce" ;;
+    2|plan-fix)      echo "plan-fix" ;;
+    3|verify-fix)    echo "verify-fix" ;;
+    4|create-tests)  echo "create-tests" ;;
+    5|submit-fix)    echo "submit-fix" ;;
+    *) echo "Error: Unknown step '$1'. Valid: reproduce, plan-fix, verify-fix, create-tests, submit-fix (or 1-5)"; exit 1 ;;
   esac
 }
 
-ALL_STEPS="reproduce plan-fix verify-fix submit-fix"
+ALL_STEPS="reproduce plan-fix verify-fix create-tests submit-fix"
 
 # Determine which steps to run
 if [ -n "$FROM_STEP" ]; then
@@ -345,14 +347,14 @@ echo ""
 # Step 1: Reproduce
 if should_run "reproduce"; then
   STEP1_LOG="$LOG_DIR/issue-${ISSUE_NUMBER}-1-reproduce-${TIMESTAMP}.log"
-  echo "=== [1/4] Reproducing issue... ==="
+  echo "=== [1/5] Reproducing issue... ==="
   STEP_START=$(date +%s)
   clean_environment
   echo "  Log: $STEP1_LOG"
   run_claude_streaming "$STEP1_LOG" "/reproduce $ISSUE_URL"
   STEP_END=$(date +%s)
   echo "  Duration: $(( STEP_END - STEP_START ))s"
-  if [ ! -f ".ai/issue-analysis-${ISSUE_NUMBER}.md" ]; then
+  if [ ! -f ".ai/ia-${ISSUE_NUMBER}.md" ]; then
     echo "Error: Reproduction failed — no issue analysis artifact found."
     exit 1
   fi
@@ -364,7 +366,7 @@ fi
 # Step 2: Plan and fix
 if should_run "plan-fix"; then
   STEP2_LOG="$LOG_DIR/issue-${ISSUE_NUMBER}-2-plan-fix-${TIMESTAMP}.log"
-  echo "=== [2/4] Planning and implementing fix... ==="
+  echo "=== [2/5] Planning and implementing fix... ==="
   STEP_START=$(date +%s)
   clean_environment
   echo "  Log: $STEP2_LOG"
@@ -379,7 +381,7 @@ fi
 # Step 3: Verify fix
 if should_run "verify-fix"; then
   STEP3_LOG="$LOG_DIR/issue-${ISSUE_NUMBER}-3-verify-fix-${TIMESTAMP}.log"
-  echo "=== [3/4] Verifying fix... ==="
+  echo "=== [3/5] Verifying fix... ==="
   STEP_START=$(date +%s)
   clean_environment
   echo "  Log: $STEP3_LOG"
@@ -391,14 +393,29 @@ if should_run "verify-fix"; then
   echo ""
 fi
 
-# Step 4: Submit fix
-if should_run "submit-fix"; then
-  STEP4_LOG="$LOG_DIR/issue-${ISSUE_NUMBER}-4-submit-fix-${TIMESTAMP}.log"
-  echo "=== [4/4] Submitting PRs... ==="
+# Step 4: Create tests
+if should_run "create-tests"; then
+  STEP4_LOG="$LOG_DIR/issue-${ISSUE_NUMBER}-4-create-tests-${TIMESTAMP}.log"
+  echo "=== [4/5] Creating tests... ==="
   STEP_START=$(date +%s)
   clean_environment
   echo "  Log: $STEP4_LOG"
-  run_claude_streaming "$STEP4_LOG" "/submit-fix $ISSUE_NUMBER"
+  run_claude_streaming "$STEP4_LOG" "/create-tests $ISSUE_NUMBER"
+  STEP_END=$(date +%s)
+  echo "  Duration: $(( STEP_END - STEP_START ))s"
+  echo ""
+  echo "=== Tests created ==="
+  echo ""
+fi
+
+# Step 5: Submit fix
+if should_run "submit-fix"; then
+  STEP5_LOG="$LOG_DIR/issue-${ISSUE_NUMBER}-5-submit-fix-${TIMESTAMP}.log"
+  echo "=== [5/5] Submitting PRs... ==="
+  STEP_START=$(date +%s)
+  clean_environment
+  echo "  Log: $STEP5_LOG"
+  run_claude_streaming "$STEP5_LOG" "/submit-fix $ISSUE_NUMBER"
   STEP_END=$(date +%s)
   echo "  Duration: $(( STEP_END - STEP_START ))s"
   echo ""
