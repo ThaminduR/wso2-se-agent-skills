@@ -9,7 +9,7 @@ argument-hint: "[Issue number]"
 
 ## Input
 
-Read `.ai/issue-analysis-<issue_number>.md` for the issue context.
+Read `.ai/ia-<issue_number>.md` for the issue context.
 NOTE: If the analysis artifact say the issue is already fixed or not reproducible, do not proceed with the fix. Report and stop.
 
 ## Pre-checks — DO NOT SKIP
