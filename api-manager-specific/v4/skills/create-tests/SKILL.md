@@ -27,11 +27,7 @@ If the bug involves multiple components or API flows, write integration tests th
 
 ## Step 4: Run & Verify the Tests
 
-Run the tests in the affected module:
-```
-cd <repo>/<module-path>
-mvn test -Dtest=<TestClassName>
-```
+Run the tests in the affected module.
 
 Verify:
 - All new tests pass
