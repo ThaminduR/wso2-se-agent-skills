@@ -16,12 +16,7 @@ argument-hint: "[GitHub Issue URL or ID]"
    - Any known issues or limitations
    If the dev test status is FAILED, pay special attention to the "Known Issues" section — the fix may be incomplete.
 
-3. **Build and patch the product** — Follow the patching instructions in CLAUDE.md:
-   - Build the changed module(s): `mvn clean install -Dmaven.test.skip=true`
-   - Extract a fresh product pack from the zip
-   - Apply JAR patches to `repository/components/patches/patch9999/`
-   - Apply any template or WAR patches
-   - Start the server
+3. **Build and deploy the fix** — Build the changed module(s) and, if patching is needed, apply patches following the instructions in CLAUDE.md. Start the product/server.
 
 4. **Verify at runtime** — You MUST actually test the fix against a running product. Checking code diffs, grepping compiled bundles, or confirming "the build succeeded" is NOT verification. You must observe the correct behavior at runtime.
 
