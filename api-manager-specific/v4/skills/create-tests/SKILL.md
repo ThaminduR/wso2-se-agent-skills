@@ -40,7 +40,7 @@ Verify:
 
 ## Step 5: Write Tests Summary
 
-Create `.ai/test-summary-<issue_number>.md`:
+Create `.ai/test-<issue_number>.md`:
 
 ```markdown
 # Test Summary — Issue #<issue_number>

@@ -18,14 +18,14 @@ Determine whether this is a **Bug**, **Feature Request**, **Question**, or **Enh
 
 ## Step 2: Environment Setup
 
-1. Build the product from the relevant branch.
-2. Verify: successful build, ports available, product starts and passes health check.
+1. If a product zip is available use it, else build the product from the relevant branch.
+2. Verify: Ports available, product starts and passes health check.
 
-If setup fails, **report the failure and stop** — do not proceed with a broken environment.
+If setup fails, **report the failure and stop**
 
 ## Step 3: Reproduce the Bug
 
-**⚠️ THIS STEP IS MANDATORY. YOU MUST ACTUALLY TRIGGER THE BUG IN A RUNNING PRODUCT.**
+**THIS STEP IS MANDATORY. YOU MUST ACTUALLY TRIGGER THE BUG IN A RUNNING PRODUCT.**
 
 **"Reproduction" means observing the bug happen at runtime — NOT reading source code, NOT analyzing logic, NOT grepping compiled output. If you have not seen the actual incorrect behavior with your own eyes (via Playwright screenshots, curl responses, or log output from a running server), you have NOT reproduced the bug. Do not mark it as reproduced.**
 
@@ -36,8 +36,8 @@ If setup fails, **report the failure and stop** — do not proceed with a broken
 1. Start the product server and wait for it to be ready.
 2. Follow the reproduction steps from the issue (or infer reasonable steps if not provided).
 3. Determine whether this is a **frontend** or **backend** issue:
-   - **Frontend issue** (involves UI behavior — clicking, forms, navigation, element visibility, layout, etc.): Use **Playwright** to drive a real browser. Follow the "Interacting with the Frontend (Playwright)" section in CLAUDE.md. Save the script as `.ai/reproduce-<issue_number>.mjs` so verify-fix can reuse it.
-   - **Backend issue** (involves REST API responses, server errors, data processing, etc.): Use **curl** to make real HTTP requests to the running server.
+   - **Frontend issue** (involves UI behavior — clicking, forms, navigation): Use **Playwright** to drive a real browser. Save the script as `.ai/reproduce-<issue_number>.mjs` so verify-fix can reuse it. Refer CLAUDE.md for Playwright guides.
+   - **Backend issue** (involves REST API responses, server errors): Use **curl** to make real HTTP requests to the running server.
 4. Capture concrete evidence:
    - **Frontend**: Screenshots at each key step showing the actual buggy behavior.
    - **Backend**: Full HTTP responses (status code, headers, body), error logs from the server.
@@ -45,22 +45,24 @@ If setup fails, **report the failure and stop** — do not proceed with a broken
 
 ### What counts as reproduction evidence
 
-- ✅ Playwright screenshot showing a UI element is hidden when it should be visible
-- ✅ curl response showing HTTP 500 when it should be 200
-- ✅ Server log showing an exception during an API call you made
-- ❌ "Code analysis confirms the bug" — this is NOT reproduction
-- ❌ "The logic shows enableDirectToken is never restored" — this is analysis, NOT reproduction
-- ❌ `curl -sk -o /dev/null -w "%{http_code}" <url>` returning 200 — this only proves the page loads, NOT that the bug exists
+- Playwright screenshot showing a UI element is hidden when it should be visible
+- curl response showing HTTP 500 when it should be 200
+- Server log showing an exception during an API call you made
 
-**REST API reference:** See the "REST API Reference" section in CLAUDE.md for Postman collections, OpenAPI specs, and product documentation paths.
+### What does NOT count as reproduction evidence
+
+- "Code analysis confirms the bug" — this is NOT reproduction
+- "The logic shows enableDirectToken is never restored" — this is analysis, NOT reproduction
+- `curl -sk -o /dev/null -w "%{http_code}" <url>` returning 200 — this only proves the page loads, NOT that the bug exists
+**REST API reference:** See the REST API Reference section in CLAUDE.md
 
 ## Step 4: Locate Related Tests
 
-Analyze the test coverage related to the issue.
+Analyze only the unit test coverage related to the issue.
 
 ## Step 5: Write the Output Artifact
 
-Create the directory `.ai/` at the repo root if it doesn't exist. Write the analysis to `.ai/issue-analysis-<issue_number>.md` using this exact format:
+Create the directory `.ai/` at the repo root if it doesn't exist. Write the analysis to `.ai/ia-<issue_number>.md` using this exact format:
 
 ```markdown
 # Issue Analysis — [Issue #ID]: [Issue Title]
@@ -80,7 +82,7 @@ Create the directory `.ai/` at the repo root if it doesn't exist. Write the anal
   2. [step]
 - **Expected Behavior:** [what should happen]
 - **Actual Behavior:** [what actually happened — describe what you OBSERVED, not what you read in code]
-- **Evidence:** [screenshots from .ai/screenshots/, curl output, or server log excerpts — MUST be from runtime, not code]
+- **Evidence:** [screenshots in .ai/screenshots-<issue_number>/, curl output, or server log excerpts — MUST be from runtime, not code]
 
 ## Root Cause Analysis
 Brief analysis of what is likely causing the bug based on reproduction results.
@@ -90,7 +92,6 @@ Brief analysis of what is likely causing the bug based on reproduction results.
 - **Coverage gaps identified:** [paths with no tests]
 - **Proposed test plan:**
   - Unit test: [description]
-  - Integration test: [description]
   - Negative/edge cases: [description]
 ```
 
