@@ -6,9 +6,9 @@ I was thinking about this — if I'm a product owner, what strategy would I use 
 
 When a bug issue is created, an **ANALYZE_AND_REPRODUCE** agent will automatically kick in. It will try to reproduce the bug and comment on the issue with its verdict — whether this is actually a bug or a false positive — along with some extra details: potential root cause, potential fix. If it's not reproducible, it will ask the issue creator further questions for more detailed steps, or pinpoint a problem in the provided steps.
 
-Then, as a product expert, I review the issue and the agent's response and make the decision. If the verdict is true positive, I decide whether this issue should be assigned to AI or a human. If the fix is tricky, touches a crucial part of the system, or I'm not confident that the agent found the correct root cause or the correct approach to fix — I will assign a human to own and fix the bug. If it's something I'm confident AI can fix, I will assign the **FIX** agent.
+Then, as a product expert, I review the issue and the agent's response and make the decision. If the verdict is true positive, I decide whether this issue should be assigned to AI or a human. If the fix is tricky, touches a crucial part of the system, or I'm not confident that the agent found the correct root cause or the correct approach to fix — I will assign a human to own and fix the bug. If it's something I'm confident AI can fix, I will assign the **FIX** agent. If the issue is assgined to the Fix agent, it will start run on a VM and deliver a fix via a PR.
 
-Once a PR is produced, whether from a human or an agent, a **QA/QE/CODE_QUALITY** agent automatically starts working on the PR to verify that the fix actually fixes the problem and the code produced is a quality one.
+Once a PR is produced, whether from a human or an agent, a **QA/QE/CODE_QUALITY** agent automatically starts working on the PR to verify that the fix actually fixes the problem and the code produced is a quality one. Based on the result of this agent, the developer or the fix agent can go on iterations if the pr agent found some valid problems
 
 Once the verdict is available on the PR, it is still the responsibility of a product expert to approve this PR.
 
