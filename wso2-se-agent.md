@@ -33,6 +33,7 @@ wso2-se-agent \
   [--to        <phase>]          # stop after this phase (pairs with --from)
   [--setup]                      # shorthand for --from prereq --to skills
   [--auto-fix]                   # shorthand for --from reproduce --to pr
+  [--max-turns  <n>]             # per-phase turn limit for Claude (overrides recipe defaults)
   [--yes]                        # non-interactive; skip confirmations
   [--dry-run]                    # show the plan without executing
   [--verbose | -v]
@@ -233,12 +234,44 @@ $ wso2-se-agent \
 
 ---
 
-## 8. Implementation Notes
+## 8. Cost Guardrails
+
+AI-backed phases run headless with no human in the loop — a single runaway phase can burn through tokens fast. In early testing across 15 APIM issues, one issue (`4856`) consumed **$49.98** across 4 attempts, with a single `plan-and-fix` phase hitting **253 turns / $24.14** before being stopped. The successful attempt only cost $8.65.
+
+### Turn limits
+
+Each AI-backed phase has a default `max_turns` defined in the product recipe:
+
+```yaml
+phase_limits:
+  reproduce:     { max_turns: 60 }
+  plan-and-fix:  { max_turns: 120 }
+  verify:        { max_turns: 60 }
+  test-coverage: { max_turns: 80 }
+  pr:            { max_turns: 30 }
+```
+
+These defaults are based on observed successful runs. The CLI passes `--max-turns <n>` to every `claude -p` invocation. The `--max-turns` CLI flag overrides the recipe default for all phases in that run.
+
+### Behavior on limit hit
+
+When Claude reaches the turn limit, the CLI:
+
+1. Captures whatever partial output exists.
+2. Marks the phase as `failed:turn_limit` in `.wse-state.json`.
+3. Logs the turn count and estimated cost at that point.
+4. Moves on to static post-work (which will likely fail artifact checks, confirming the phase didn't complete).
+
+This prevents silent cost accumulation. The user can then inspect logs, adjust limits, and re-run the phase.
+
+---
+
+## 9. Implementation Notes
 
 - **Language.** Node.js (TypeScript) or Python. TypeScript + `oclif`/`commander` fits the subcommand ergonomics. Python is simpler to distribute as a wheel. No strong preference — pick whichever the team maintains more.
 - **Product recipes.** Declarative YAML under `recipes/<product>/<version>.yaml`. Adding a new product or version = adding a recipe file; no code change.
 - **Skills fetch.** Pin the `wso2-se-agent-skills` commit SHA in each recipe so behavior is reproducible across CLI versions.
-- **Headless Claude invocation.** Prefer `claude -p --output-format json` so static post-work can parse structured results. Fall back to stdout scraping only where necessary.
+- **Headless Claude invocation.** Prefer `claude -p --output-format json --max-turns <n>` so static post-work can parse structured results and runaway phases are bounded. Fall back to stdout scraping only where necessary.
 - **State file.** `.wse-state.json` is the contract between phases. Version the schema from day one.
 - **Logs.** Every phase tees output to `<workspace>/.wse/logs/<phase>-<timestamp>.log`. Essential for debugging AI-backed phases after the fact.
 - **Confirmations.** Any phase that writes code (`plan-and-fix`, `test-coverage`), mutates git (`pr`), or resets a dirty repo (`workspace`) prompts unless `--yes`.
@@ -246,7 +279,7 @@ $ wso2-se-agent \
 
 ---
 
-## 9. Open Questions
+## 10. Open Questions
 
 1. Do we support multi-issue batches (`--issues issues.txt`) in v1, or defer?
 2. Should `--auto-fix` pause for human review between each AI-backed phase, or only at the end? *(Suggest: pause by default, `--yes` to fully automate.)*
