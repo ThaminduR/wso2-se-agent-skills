@@ -282,7 +282,7 @@ This prevents silent cost accumulation. The user can then inspect logs, adjust l
 ## 10. Open Questions
 
 1. Do we support multi-issue batches (`--issues issues.txt`) in v1, or defer?
-2. Should `--auto-fix` pause for human review between each AI-backed phase, or only at the end? *(Suggest: pause by default, `--yes` to fully automate.)*
+2. ~~Should `--auto-fix` pause for human review between each AI-backed phase, or only at the end?~~ **Decided:** `--auto-fix` pauses for human review between each AI-backed phase by default. Pass `--yes` to skip all confirmations and fully automate.
 3. Where does the tool live — a new `wso2/wso2-se-agent` repo, or under the existing skills repo?
 4. How are product recipes kept in sync with new product releases? *(Suggest: a CI job in the skills repo that validates recipes monthly.)*
 5. Should static post-work have the ability to re-invoke Claude with corrective feedback ("your plan.md is missing a root-cause section, try again")? Or is that a skill-level concern?
