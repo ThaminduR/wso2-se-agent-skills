@@ -295,24 +295,3 @@ When Claude reaches the turn limit, the CLI:
 
 This prevents silent cost accumulation. The user can then inspect logs, adjust limits, and re-run the phase.
 
----
-
-## 9. Implementation Notes
-
-- **Language.** Node.js (TypeScript) or Python. TypeScript + `oclif`/`commander` fits the subcommand ergonomics. Python is simpler to distribute as a wheel. No strong preference — pick whichever the team maintains more.
-- **Product recipes.** Declarative YAML under `recipes/<product>/<version>.yaml`. Adding a new product or version = adding a recipe file; no code change.
-- **Skills fetch.** Pin the `wso2-se-agent-skills` commit SHA in each recipe so behavior is reproducible across CLI versions.
-- **Headless Claude invocation.** Prefer `claude -p --output-format json --max-turns <n>` so static post-work can parse structured results and runaway phases are bounded. Fall back to stdout scraping only where necessary.
-- **State file.** `.wse-state.json` is the contract between phases. Version the schema from day one.
-- **Logs.** Every phase tees output to `<workspace>/.wse/logs/<phase>-<timestamp>.log`. Essential for debugging AI-backed phases after the fact.
-- **Confirmations.** `--auto-fix` pauses for human review between each AI-backed phase by default. Any phase that writes code (`plan-and-fix`, `test-coverage`), mutates git (`pr`), or resets a dirty repo (`workspace`) also prompts individually. `--yes` skips all pauses and confirmations for fully unattended runs.
-- **Exit codes.** `0` success, `1` user error, `2` prereq failure, `3` static pre/post-work failure, `4` Claude-invocation failure — so CI wrappers can react differently.
-
----
-
-## 10. Open Questions
-
-1. Do we support multi-issue batches (`--issues issues.txt`) in v1, or defer?
-2. Where does the tool live — a new `wso2/wso2-se-agent` repo, or under the existing skills repo?
-3. How are product recipes kept in sync with new product releases? *(Suggest: a CI job in the skills repo that validates recipes monthly.)*
-4. Should static post-work have the ability to re-invoke Claude with corrective feedback ("your plan.md is missing a root-cause section, try again")? Or is that a skill-level concern?
