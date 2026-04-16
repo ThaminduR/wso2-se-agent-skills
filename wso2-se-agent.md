@@ -32,7 +32,7 @@ wso2-se-agent \
   [--from      <phase>]          # run FROM this phase to the end
   [--to        <phase>]          # stop after this phase (pairs with --from)
   [--setup]                      # shorthand for --from prereq --to skills
-  [--auto-fix]                   # shorthand for --from reproduce --to pr
+  [--auto-fix]                   # shorthand for --from reproduce --to pr; pauses between AI phases
   [--max-turns  <n>]             # per-phase turn limit for Claude (overrides recipe defaults)
   [--yes]                        # non-interactive; skip confirmations
   [--dry-run]                    # show the plan without executing
@@ -45,6 +45,7 @@ wso2-se-agent \
 2. `--setup` / `--auto-fix` are sugar over `--from` / `--to`.
 3. `--from` without `--to` runs to the end.
 4. No phase flag → run **all** phases end-to-end.
+5. `--auto-fix` pauses for human review between each AI-backed phase. Pass `--yes` to skip all pauses and run fully unattended.
 
 ---
 
@@ -225,10 +226,14 @@ $ wso2-se-agent \
 [2/8] workspace       ✓  static  — cloned carbon-apimgt@v4.3.0, product-apim@v4.3.0
 [3/8] skills          ✓  static  — installed api-manager-specific/v3, port offset 100, wrote CLAUDE.md
 [4/8] reproduce       ✓  claude  — bug reproduced, evidence in .wse/reproduction/
+                      ▸  pause   — review reproduction at .wse/reproduction/. Continue? [Y/n]
 [5/8] plan-and-fix    ▸  claude  — plan ready at .wse/plan.md, review? [Y/n]
                       ✓           applied 3 edits to carbon-apimgt
+                      ▸  pause   — review changes before verification. Continue? [Y/n]
 [6/8] verify          ✓  claude  — repro now passes, 0 regressions in 412 tests
+                      ▸  pause   — review verification results. Continue? [Y/n]
 [7/8] test-coverage   ✓  claude  — added 2 unit tests, 1 integration test
+                      ▸  pause   — review new tests. Continue? [Y/n]
 [8/8] pr              ✓  claude  — opened https://github.com/wso2/carbon-apimgt/pull/5678
 ```
 
@@ -274,7 +279,7 @@ This prevents silent cost accumulation. The user can then inspect logs, adjust l
 - **Headless Claude invocation.** Prefer `claude -p --output-format json --max-turns <n>` so static post-work can parse structured results and runaway phases are bounded. Fall back to stdout scraping only where necessary.
 - **State file.** `.wse-state.json` is the contract between phases. Version the schema from day one.
 - **Logs.** Every phase tees output to `<workspace>/.wse/logs/<phase>-<timestamp>.log`. Essential for debugging AI-backed phases after the fact.
-- **Confirmations.** Any phase that writes code (`plan-and-fix`, `test-coverage`), mutates git (`pr`), or resets a dirty repo (`workspace`) prompts unless `--yes`.
+- **Confirmations.** `--auto-fix` pauses for human review between each AI-backed phase by default. Any phase that writes code (`plan-and-fix`, `test-coverage`), mutates git (`pr`), or resets a dirty repo (`workspace`) also prompts individually. `--yes` skips all pauses and confirmations for fully unattended runs.
 - **Exit codes.** `0` success, `1` user error, `2` prereq failure, `3` static pre/post-work failure, `4` Claude-invocation failure — so CI wrappers can react differently.
 
 ---
@@ -282,7 +287,6 @@ This prevents silent cost accumulation. The user can then inspect logs, adjust l
 ## 10. Open Questions
 
 1. Do we support multi-issue batches (`--issues issues.txt`) in v1, or defer?
-2. ~~Should `--auto-fix` pause for human review between each AI-backed phase, or only at the end?~~ **Decided:** `--auto-fix` pauses for human review between each AI-backed phase by default. Pass `--yes` to skip all confirmations and fully automate.
-3. Where does the tool live — a new `wso2/wso2-se-agent` repo, or under the existing skills repo?
-4. How are product recipes kept in sync with new product releases? *(Suggest: a CI job in the skills repo that validates recipes monthly.)*
-5. Should static post-work have the ability to re-invoke Claude with corrective feedback ("your plan.md is missing a root-cause section, try again")? Or is that a skill-level concern?
+2. Where does the tool live — a new `wso2/wso2-se-agent` repo, or under the existing skills repo?
+3. How are product recipes kept in sync with new product releases? *(Suggest: a CI job in the skills repo that validates recipes monthly.)*
+4. Should static post-work have the ability to re-invoke Claude with corrective feedback ("your plan.md is missing a root-cause section, try again")? Or is that a skill-level concern?
