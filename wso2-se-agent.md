@@ -34,7 +34,8 @@ wso2-se-agent \
   [--setup]                      # shorthand for --from prereq --to skills
   [--auto-fix]                   # shorthand for --from reproduce --to pr; pauses between AI phases
   [--max-turns  <n>]             # per-phase turn limit for Claude (overrides recipe defaults)
-  [--yes]                        # non-interactive; skip confirmations
+  [--risk-threshold <0-10>]      # block auto-proceed if risk score exceeds this (default: 7)
+  [--yes]                        # non-interactive; skip confirmations (risk gate still applies)
   [--dry-run]                    # show the plan without executing
   [--verbose | -v]
 ```
@@ -46,6 +47,7 @@ wso2-se-agent \
 3. `--from` without `--to` runs to the end.
 4. No phase flag → run **all** phases end-to-end.
 5. `--auto-fix` pauses for human review between each AI-backed phase. Pass `--yes` to skip all pauses and run fully unattended.
+6. `--risk-threshold` is respected even with `--yes` — if the `risk-assessment` phase scores above the threshold, the pipeline halts and requires explicit human approval before proceeding to `plan-and-fix`.
 
 ---
 
@@ -65,7 +67,7 @@ Three sequential stages:
 2. **Claude headless invocation.** The CLI shells out to Claude non-interactively (`claude -p "<short prompt>" --output-format json`, or the equivalent SDK call) inside the prepared workspace. The prompt is short and points Claude at the right skill; the skill itself carries the detailed instructions. stdout/stderr are tee'd to `<workspace>/.wse/logs/<phase>-<timestamp>.log`. Structured results go back into `.wse-state.json`.
 3. **Static post-work.** Verify that the expected artifacts exist (a `plan.md`, a new branch, a green test run) before marking the phase successful. If verification fails, the phase fails even if Claude exited 0.
 
-`reproduce`, `plan-and-fix`, `verify`, `test-coverage`, and `pr` are all AI-backed phases.
+`reproduce`, `risk-assessment`, `plan-and-fix`, `verify`, `test-coverage`, and `pr` are all AI-backed phases.
 
 ### Why this split matters
 
@@ -83,10 +85,11 @@ The general rule: **if the decision is rule-based, it belongs in static code. If
 | 2 | `workspace` | Static | Clone/reset repos per recipe |
 | 3 | `skills` | Static | Install skills, allocate ports, generate `CLAUDE.md` |
 | 4 | `reproduce` | AI-backed | Run the `reproduce` skill |
-| 5 | `plan-and-fix` | AI-backed | Run the `plan-and-fix` skill |
-| 6 | `verify` | AI-backed | Run the `verify-fix` skill |
-| 7 | `test-coverage` | AI-backed | Run the `create-test-coverage` skill |
-| 8 | `pr` | AI-backed | Run the `send-pr` skill |
+| 5 | `risk-assessment` | AI-backed | Score fix complexity/risk (0–10); gate before proceeding |
+| 6 | `plan-and-fix` | AI-backed | Run the `plan-and-fix` skill |
+| 7 | `verify` | AI-backed | Run the `verify-fix` skill |
+| 8 | `test-coverage` | AI-backed | Run the `create-test-coverage` skill |
+| 9 | `pr` | AI-backed | Run the `send-pr` skill |
 
 ---
 
@@ -146,7 +149,31 @@ At the end of Phase 3, `claude` can be run inside the workspace by hand and Just
 
 ---
 
-### Phase 5 — `plan-and-fix` *(AI-backed)*
+### Phase 5 — `risk-assessment` *(AI-backed)*
+
+**Static pre-work.** Verify `.wse/reproduction/` exists with a positive repro and that `issue-analysis-<id>.md` was produced by the reproduce phase. Collect metadata: number of repos involved, number of files likely affected, whether the issue touches security-sensitive code paths, public API surfaces, or database schemas.
+
+**Claude headless.** Invokes the `risk-assessment` skill. Claude reviews the GitHub issue, the reproduction analysis artifact, and the affected codebase areas, then produces a structured risk report at `.wse/risk-assessment.md` containing:
+
+- **Risk score (0–10):** Overall complexity and risk rating.
+  - **0–3 (Low):** Typo fixes, log message corrections, simple config changes. Safe to auto-proceed.
+  - **4–6 (Medium):** Single-component logic fixes, adding missing null checks, straightforward behavioral changes. Generally safe but worth a glance.
+  - **7–8 (High):** Multi-repo changes, API contract modifications, concurrency fixes, security-sensitive areas. Human should review before proceeding.
+  - **9–10 (Critical):** Database schema changes, authentication/authorization logic, breaking API changes, changes that affect multiple products. Must not auto-proceed.
+- **Risk factors:** Itemized list of what contributes to the score (e.g. "touches 3 repos", "modifies a public REST API response schema", "concurrency-sensitive code path").
+- **Estimated scope:** Number of files/repos likely to change.
+- **Recommendation:** Whether to proceed with automated fix or hand off to a human engineer.
+
+**Static post-work.** Parse the risk score from the structured output. Record it in `.wse-state.json`. Then apply the risk gate:
+
+- If `score <= --risk-threshold` (default 7): proceed normally (or pause if not `--yes`).
+- If `score > --risk-threshold`: **halt the pipeline regardless of `--yes`**. Print the risk report summary and require explicit human confirmation before continuing to `plan-and-fix`. This ensures high-risk issues always get human eyes before the agent starts writing code.
+
+The risk gate is the one control that `--yes` cannot bypass. This is intentional — in fully automated batch runs, you want low-risk issues to flow through while high-risk ones queue up for human review.
+
+---
+
+### Phase 6 — `plan-and-fix` *(AI-backed)*
 
 **Static pre-work.** Verify `.wse/reproduction/` exists and contains a positive repro (otherwise fail with *"run `--phase reproduce` first"*). Confirm all repo working trees are clean; abort if not (unless `--yes`). Delete any prior `.wse/plan.md` so Claude produces a fresh one.
 
@@ -156,7 +183,7 @@ At the end of Phase 3, `claude` can be run inside the workspace by hand and Just
 
 ---
 
-### Phase 6 — `verify` *(AI-backed)*
+### Phase 7 — `verify` *(AI-backed)*
 
 **Static pre-work.** Rebuild the affected repos using recipe-provided commands. Stop any previously running product instance. Re-check the port offset is free.
 
@@ -166,7 +193,7 @@ At the end of Phase 3, `claude` can be run inside the workspace by hand and Just
 
 ---
 
-### Phase 7 — `test-coverage` *(AI-backed)*
+### Phase 8 — `test-coverage` *(AI-backed)*
 
 **Static pre-work.** Detect the test framework and directories via the recipe. Capture a baseline test count.
 
@@ -176,7 +203,7 @@ At the end of Phase 3, `claude` can be run inside the workspace by hand and Just
 
 ---
 
-### Phase 8 — `pr` *(AI-backed)*
+### Phase 9 — `pr` *(AI-backed)*
 
 **Static pre-work.** Verify there are committed or stage-able changes in at least one repo. Ensure the user's fork remote is configured (offer to add it if not). Check branch naming against the recipe's convention.
 
@@ -222,19 +249,21 @@ $ wso2-se-agent \
     --version 4.3.0 \
     --issue https://github.com/wso2/api-manager/issues/1234
 
-[1/8] prereq          ✓  static  — git, java 11, mvn 3.9, gh, claude present
-[2/8] workspace       ✓  static  — cloned carbon-apimgt@v4.3.0, product-apim@v4.3.0
-[3/8] skills          ✓  static  — installed api-manager-specific/v3, port offset 100, wrote CLAUDE.md
-[4/8] reproduce       ✓  claude  — bug reproduced, evidence in .wse/reproduction/
+[1/9] prereq          ✓  static  — git, java 11, mvn 3.9, gh, claude present
+[2/9] workspace       ✓  static  — cloned carbon-apimgt@v4.3.0, product-apim@v4.3.0
+[3/9] skills          ✓  static  — installed api-manager-specific/v3, port offset 100, wrote CLAUDE.md
+[4/9] reproduce       ✓  claude  — bug reproduced, evidence in .wse/reproduction/
                       ▸  pause   — review reproduction at .wse/reproduction/. Continue? [Y/n]
-[5/8] plan-and-fix    ▸  claude  — plan ready at .wse/plan.md, review? [Y/n]
+[5/9] risk-assessment ✓  claude  — risk score: 4/10 (Medium) — single-repo logic fix
+                      ▸  pass    — score 4 ≤ threshold 7, auto-proceeding
+[6/9] plan-and-fix    ▸  claude  — plan ready at .wse/plan.md, review? [Y/n]
                       ✓           applied 3 edits to carbon-apimgt
                       ▸  pause   — review changes before verification. Continue? [Y/n]
-[6/8] verify          ✓  claude  — repro now passes, 0 regressions in 412 tests
+[7/9] verify          ✓  claude  — repro now passes, 0 regressions in 412 tests
                       ▸  pause   — review verification results. Continue? [Y/n]
-[7/8] test-coverage   ✓  claude  — added 2 unit tests, 1 integration test
+[8/9] test-coverage   ✓  claude  — added 2 unit tests, 1 integration test
                       ▸  pause   — review new tests. Continue? [Y/n]
-[8/8] pr              ✓  claude  — opened https://github.com/wso2/carbon-apimgt/pull/5678
+[9/9] pr              ✓  claude  — opened https://github.com/wso2/carbon-apimgt/pull/5678
 ```
 
 ---
@@ -249,11 +278,12 @@ Each AI-backed phase has a default `max_turns` defined in the product recipe:
 
 ```yaml
 phase_limits:
-  reproduce:     { max_turns: 60 }
-  plan-and-fix:  { max_turns: 120 }
-  verify:        { max_turns: 60 }
-  test-coverage: { max_turns: 80 }
-  pr:            { max_turns: 30 }
+  reproduce:       { max_turns: 60 }
+  risk-assessment: { max_turns: 20 }
+  plan-and-fix:    { max_turns: 120 }
+  verify:          { max_turns: 60 }
+  test-coverage:   { max_turns: 80 }
+  pr:              { max_turns: 30 }
 ```
 
 These defaults are based on observed successful runs. The CLI passes `--max-turns <n>` to every `claude -p` invocation. The `--max-turns` CLI flag overrides the recipe default for all phases in that run.
