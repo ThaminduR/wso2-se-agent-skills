@@ -6,11 +6,7 @@
 
 ## 1. Overview
 
-Engineering teams spend significant time on repetitive mechanics whenever a customer-reported GitHub issue comes in: cloning the right repositories for the right product version, wiring up the correct AI skills and `CLAUDE.md`, reproducing the bug, proposing a fix, verifying it, writing tests, and opening a PR.
-
-This tool wraps that flow into a single, phased CLI so an engineer can go from **issue link → PR** with a predictable, inspectable, resumable workflow — while keeping full human control over each phase.
-
-Skills already exist and are maintained in [`wso2-se-agent-skills`](https://github.com/Tharsanan1/wso2-se-agent-skills). This CLI is the orchestrator that consumes them.
+A CLI that developers can use to automate resolving GitHub issues on a product using AI agents.
 
 ---
 
