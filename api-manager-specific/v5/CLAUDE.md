@@ -308,3 +308,38 @@ grep -i "error\|exception" wso2am-*/repository/logs/wso2carbon.log | grep -v "JM
 **Noise filtering:** `JMS` and `Siddhi` errors are benign background noise in the default APIM configuration — exclude them from error checks.
 
 If deployment errors are found (e.g., Velocity errors, template exceptions), investigate immediately — do not proceed to API invocation until the log is clean.
+
+## Database-Specific Issue Reproduction
+
+APIM supports multiple databases. SQL scripts are located at:
+```
+carbon-apimgt/features/apimgt/org.wso2.carbon.apimgt.core.feature/src/main/resources/sql/
+```
+
+### Databases you CAN run locally via Docker
+
+| Database | Docker Image | Notes |
+|----------|-------------|-------|
+| **H2** | Built into APIM (default) | No Docker needed — just start the product |
+| **MySQL** | `mysql:8` | Native arm64 and amd64 images available |
+| **PostgreSQL** | `postgres:16` | Native arm64 and amd64 images available |
+| **MSSQL** | `mcr.microsoft.com/mssql/server:2022-latest` | Native arm64 (since 2022) and amd64 |
+
+For these databases, you can spin up a container, run the SQL scripts, and reproduce the issue directly.
+
+### Databases you CANNOT reliably run locally
+
+| Database | Why |
+|----------|-----|
+| **Oracle (all variants: oracle.sql, oracle_23c.sql, oracle_rac.sql)** | No native arm64 Docker images. Emulation via `--platform linux/amd64` is extremely slow, unreliable, and often crashes. |
+| **DB2** | No native arm64 Docker images. Emulation is unreliable. |
+
+### What to do when a database CANNOT be run locally
+
+**Do NOT spend time trying to spin up Oracle or DB2 via Docker emulation.** Instead:
+
+1. **Analyze the SQL scripts in the source code** — compare the problematic query against the database-specific SQL file to identify syntax issues, type mismatches, or missing columns.
+2. **Cross-reference with a database you CAN run** — if the issue is about a query, run it against MySQL or PostgreSQL to verify the logic, then analyze the Oracle/DB2-specific SQL for differences.
+3. **Clearly state in your analysis** that the issue requires a specific database environment that cannot be reproduced locally. For example:
+   > **Human intervention required:** This issue is specific to Oracle 19c and cannot be reproduced locally (Oracle Docker images are not available for this architecture). Based on code analysis of `oracle.sql`, the root cause appears to be [explanation]. A fix has been proposed based on code analysis, but it should be verified against a real Oracle 19c instance before merging.
+4. **Still propose a fix** based on code analysis — but mark it as requiring human verification on the target database.
