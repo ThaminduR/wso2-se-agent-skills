@@ -13,16 +13,32 @@ This assessment gates the automated pipeline — a high score halts execution an
 
 ## Input
 
-Read `.ai/issue-analysis-<issue_number>.md` for the reproduction details, root cause analysis, and affected components. Also read the original GitHub issue for full context.
+Gather whatever context exists in `.ai/`:
 
-If the analysis artifact does not exist or says the issue is not reproducible / not a bug, **report this and stop** — there is nothing to assess.
+- `.ai/ia-<issue_number>.md` — reproduction analysis (from `/reproduce`). Gives you runtime-verified root cause, affected components, and test coverage notes.
+- `.ai/plan-<issue_number>.md` — fix plan (from `/plan`). Gives you the target repo/module, proposed change table, risks already flagged, and dev test plan.
+
+Also read the original GitHub issue for full context.
+
+**At least one of the two artifacts must exist.** If both are missing, stop and tell the developer to run `/reproduce` or `/plan` first — there is nothing concrete to assess.
+
+Otherwise, proceed with whichever subset is available:
+
+- **Both exist:** use the plan's Target + Proposed Change as the scope input; cross-check against the reproduction's root cause and evidence. If they disagree, flag it in the report.
+- **Only `ia-<issue_number>.md` exists:** derive scope from the reproduction's root cause analysis and affected components (the agent will need to infer target files from the source).
+- **Only `plan-<issue_number>.md` exists:** use the plan's Target and Proposed Change directly; note that the fix has not been runtime-reproduced, which itself raises Complexity risk.
+
+If an existing artifact says the issue is **not a bug**, **not reproducible**, or **already fixed**, report that and stop — there is nothing to assess.
 
 ## Step 1: Analyze Change Scope
 
 Determine what the fix will likely require by examining:
 
-1. **Affected files and modules.** Trace the root cause from the analysis artifact to the source files that need to change. List them.
-2. **Number of repositories.** Will the fix span multiple repos (e.g., `carbon-apimgt` + `product-apim`)? Check if template files, config files, or build artifacts in other repos also need updating.
+1. **Affected files and modules.**
+   - If `.ai/plan-<issue_number>.md` exists, use its **Target** and **Proposed Change** table directly — that's already the scoped file list. Do not re-derive from scratch.
+   - If only `.ai/ia-<issue_number>.md` exists, trace the root cause from the reproduction artifact to the source files that need to change.
+   - Either way, spot-check the source to confirm the list is complete (the plan could miss a caller, the reproduction could miss a template file).
+2. **Number of repositories.** Will the fix span multiple repos (e.g., `carbon-apimgt` + `product-apim`)? The plan's Target section usually answers this; otherwise check if template files, config files, or build artifacts in other repos also need updating.
 3. **Dependency graph.** Identify what depends on the code being changed — downstream callers, API consumers, template renderers, serialization paths.
 4. **Change type.** Classify as one of:
    - **Cosmetic** — typo, log message, comment, docs
@@ -130,6 +146,11 @@ Create `.ai/risk-assessment-<issue_number>.md` using this exact format:
 # Risk Assessment — Issue #<issue_number>: <issue_title>
 
 ## Risk Score: <score>/10 (<level>)
+
+## Inputs Used
+- `.ai/ia-<issue_number>.md`: <yes / no>
+- `.ai/plan-<issue_number>.md`: <yes / no>
+- <If both exist and disagree on root cause or scope, describe the disagreement here.>
 
 ## Dimension Scores
 
