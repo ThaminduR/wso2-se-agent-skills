@@ -316,27 +316,22 @@ APIM supports multiple databases. SQL scripts are located at:
 carbon-apimgt/features/apimgt/org.wso2.carbon.apimgt.core.feature/src/main/resources/sql/
 ```
 
-### Databases you CAN run locally via Docker
+### Databases with Docker support
 
-| Database | Docker Image | Notes |
-|----------|-------------|-------|
-| **H2** | Built into APIM (default) | No Docker needed — just start the product |
-| **MySQL** | `mysql:8` | Native arm64 and amd64 images available |
-| **PostgreSQL** | `postgres:16` | Native arm64 and amd64 images available |
-| **MSSQL** | `mcr.microsoft.com/mssql/server:2022-latest` | Native arm64 (since 2022) and amd64 |
+| Database | Docker Image | arm64 (Apple Silicon) | amd64 (Linux/Intel) |
+|----------|-------------|----------------------|---------------------|
+| **H2** | Built into APIM (default) | Works | Works |
+| **MySQL** | `mysql:8` | Works | Works |
+| **PostgreSQL** | `postgres:16` | Works | Works |
+| **MSSQL** | `mcr.microsoft.com/mssql/server:2022-latest` | Works | Works |
+| **Oracle** | `gvenzl/oracle-xe` / `gvenzl/oracle-free` | No native image — emulation is slow/unreliable | Works |
+| **DB2** | `ibmcom/db2` | No native image — emulation is slow/unreliable | Works |
 
-For these databases, you can spin up a container, run the SQL scripts, and reproduce the issue directly.
+**Check the "System Info" section at the bottom of this file** to determine which architecture you are on. If the architecture is `arm64`/`aarch64`, do NOT attempt to run Oracle or DB2 via Docker — it will waste time and likely fail.
 
-### Databases you CANNOT reliably run locally
+### What to do when a database cannot be run locally
 
-| Database | Why |
-|----------|-----|
-| **Oracle (all variants: oracle.sql, oracle_23c.sql, oracle_rac.sql)** | No native arm64 Docker images. Emulation via `--platform linux/amd64` is extremely slow, unreliable, and often crashes. |
-| **DB2** | No native arm64 Docker images. Emulation is unreliable. |
-
-### What to do when a database CANNOT be run locally
-
-**Do NOT spend time trying to spin up Oracle or DB2 via Docker emulation.** Instead:
+**If the issue is specific to a database you cannot run (e.g., Oracle on arm64), do NOT spend time on Docker emulation.** Instead:
 
 1. **Analyze the SQL scripts in the source code** — compare the problematic query against the database-specific SQL file to identify syntax issues, type mismatches, or missing columns.
 2. **Cross-reference with a database you CAN run** — if the issue is about a query, run it against MySQL or PostgreSQL to verify the logic, then analyze the Oracle/DB2-specific SQL for differences.
