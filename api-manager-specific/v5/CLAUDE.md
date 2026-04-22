@@ -309,6 +309,45 @@ grep -i "error\|exception" wso2am-*/repository/logs/wso2carbon.log | grep -v "JM
 
 If deployment errors are found (e.g., Velocity errors, template exceptions), investigate immediately — do not proceed to API invocation until the log is clean.
 
+## Deployment-Specific Issue Reproduction
+
+APIM supports multiple deployment patterns. Not all can be reproduced locally.
+
+### Deployment patterns you CAN test locally
+
+| Pattern | How |
+|---------|-----|
+| **All-in-One (Single Node)** | Extract the pack and start — this is the default and what the CLI sets up |
+
+### Deployment patterns you CANNOT test locally
+
+| Pattern | Why |
+|---------|-----|
+| **All-in-One HA** | Requires 2+ nodes with a load balancer |
+| **Distributed (Control Plane + Gateway + Traffic Manager)** | Requires running multiple separate server profiles with inter-node communication |
+| **Fully Distributed (+ Key Manager)** | Requires 4 separate server processes with specific networking |
+| **Multi-DC / Geo-Distributed** | Requires multiple regions with replicated databases |
+| **Kubernetes / OpenShift** | Requires a Kubernetes cluster with Helm charts |
+| **IS as Key Manager** | Requires a separate WSO2 Identity Server instance |
+
+### Separate distributable components (for reference)
+
+The product ships as 4 separate distributions for distributed deployments:
+- **All-in-One APIM** — all components in one runtime
+- **API Control Plane (ACP)** — publisher, devportal, key manager
+- **Universal Gateway** — API traffic handling only
+- **Traffic Manager** — rate limiting and throttling
+
+### What to do when an issue requires a non-local deployment pattern
+
+If the issue mentions distributed deployment, HA, Kubernetes, multiple gateways, traffic manager separation, or cross-node communication:
+
+1. **Analyze the code** — trace the affected component, configuration, and inter-node communication logic in the source.
+2. **Test what you can** — if the bug is in a specific component (e.g., gateway logic), you may be able to reproduce the core behavior in all-in-one mode even if the issue was reported in a distributed setup.
+3. **If the deployment topology is essential to the bug** (e.g., cluster synchronization, load balancer behavior, multi-node event distribution), state clearly:
+   > **Human intervention required:** This issue involves [distributed/HA/k8s] deployment which cannot be reproduced locally. Based on code analysis, the root cause appears to be [explanation]. The fix should be verified in a [specific deployment pattern] environment before merging.
+4. **Still propose a fix** based on code analysis — but mark it as requiring human verification in the target deployment topology.
+
 ## Database-Specific Issue Reproduction
 
 APIM supports multiple databases. SQL scripts are located at:
