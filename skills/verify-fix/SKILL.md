@@ -6,6 +6,8 @@ argument-hint: "[GitHub Issue URL or ID]"
 
 # /verify-fix — Bug Fix Verification through Reproduction
 
+**Hard rule: verification must be done against an actual running instance of the product, with the fix deployed.** Re-running the original reproduction steps against a real, started server is the only thing that counts. Unit tests of the patched method, test-harness simulations, in-memory mocks, dry runs, code-diff inspection, and "the build succeeded" are NOT verification — they only show the code compiles or behaves a certain way in isolation, not that the bug is gone in the running product.
+
 ## Steps
 
 1. **Fetch the issue** — get the issue details and understand the expected behavior.
@@ -17,9 +19,9 @@ argument-hint: "[GitHub Issue URL or ID]"
    - Any known issues, limitations, or deviations from the plan
    If the dev test status is FAILED, pay special attention to the "Known Issues" and "Deviations From Plan" sections — the fix may be incomplete.
 
-3. **Build and deploy the fix** — Build the changed module(s) and, if patching is needed, apply patches following the instructions in CLAUDE.md. Start the product/server.
+3. **Build and deploy the fix on a real server** — Build the changed module(s), apply patches per CLAUDE.md, start the product/server, and confirm it reached the documented readiness signal. The reproduction in step 4 must run against THIS started instance — not a unit-test runner, not a mock, not an embedded harness. If the server fails to start with the patch applied, stop and report; the fix is not verified.
 
-4. **Verify at runtime** — You MUST actually test the fix against a running product. Checking code diffs, grepping compiled bundles, or confirming "the build succeeded" is NOT verification. You must observe the correct behavior at runtime.
+4. **Verify at runtime against the running server** — Re-run the reproduction from `.ai/ia-<issue_number>.md` (or the issue's reproduction steps) against the started server. The bug behavior must no longer occur, observed via the same channel that originally exhibited it (browser, HTTP request, log output).
 
    **For frontend bugs:** Use Playwright — follow the "Interacting with the Frontend (Playwright)" section in CLAUDE.md.
    - If a reproduction script exists from the reproduce step (`.ai/reproduce-<issue_number>.mjs`), run it — the bug behavior should no longer occur.
@@ -36,9 +38,12 @@ argument-hint: "[GitHub Issue URL or ID]"
    - ❌ "The compiled bundle contains the fix logic" — grepping minified JS is not verification
    - ❌ "The build succeeded" — a successful build only means the code compiles
    - ❌ "The admin portal loads (HTTP 200)" — this only means the server is running
-   - ✅ Playwright screenshots showing the correct UI behavior after the fix
-   - ✅ curl response showing the correct HTTP status/body after the fix
-   - ✅ Server logs showing no errors where there were errors before
+   - ❌ "A unit/integration test of the patched method passes" — that exercises the code in isolation, not the bug in the running product
+   - ❌ "The fix logic was simulated in a script / harness / REPL" — a simulation is not the running product
+   - ❌ "The fix is correct by inspection of the diff" — code review is not runtime verification
+   - ✅ Playwright screenshots showing the correct UI behavior after the fix, captured against the started server
+   - ✅ curl response from the started server showing the correct HTTP status/body after the fix
+   - ✅ Server logs from the started server showing no errors where there were errors before
 
 5. **Report** — Create `.ai/verify-<issue_number>.md`:
 
