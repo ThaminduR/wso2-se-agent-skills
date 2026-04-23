@@ -18,26 +18,51 @@ Determine whether this is a **Bug**, **Feature Request**, **Question**, or **Enh
 
 ## Step 2: Environment Setup
 
-1. Build the product from the relevant branch.
-2. Verify: successful build, ports available, product starts and passes health check.
+1. If a product zip is available use it, else build the product from the relevant branch.
+2. Verify: Ports available, product starts and passes health check.
 
-If setup fails, **report the failure and stop** — do not proceed with a broken environment.
+If setup fails, **report the failure and stop**
 
-## Step 3: Reproduce the Bug (**THIS IS A MANDATORY STEP**, ALWAYS REPRODUCE THS ISSUE, INSTEAD OF RELYING ON CODE INSPECTION ALONE)
+## Step 3: Reproduce the Bug
 
-1. Follow the reproduction steps from the issue (or infer reasonable steps if not provided).
-2. Use Deployment instructions in the project to execute the reproduction steps.
-3. **If the issue involves frontend, use the frontend to reproduce the issue**. **If the issue is involving only backend, then you can run the backend and use curl to reproduce the issue**.
-4. Capture all logs, error output, and HTTP responses.
-5. Record expected vs. actual behavior.
+**THIS STEP IS MANDATORY. YOU MUST ACTUALLY TRIGGER THE BUG IN A RUNNING PRODUCT.**
+
+**"Reproduction" means observing the bug happen at runtime — NOT reading source code, NOT analyzing logic, NOT grepping compiled output. If you have not seen the actual incorrect behavior with your own eyes (via Playwright screenshots, curl responses, or log output from a running server), you have NOT reproduced the bug. Do not mark it as reproduced.**
+
+**Code inspection is useful for root cause analysis (Step 5), but it is NOT reproduction. You must complete this step before writing any root cause analysis.**
+
+### How to reproduce
+
+1. Start the product server and wait for it to be ready.
+2. Follow the reproduction steps from the issue (or infer reasonable steps if not provided).
+3. Determine whether this is a **frontend** or **backend** issue:
+   - **Frontend issue** (involves UI behavior — clicking, forms, navigation): Use **Playwright** to drive a real browser. Save the script as `.ai/reproduce-<issue_number>.mjs` so verify-fix can reuse it. Refer CLAUDE.md for Playwright guides.
+   - **Backend issue** (involves REST API responses, server errors): Use **curl** to make real HTTP requests to the running server.
+4. Capture concrete evidence:
+   - **Frontend**: Screenshots at each key step showing the actual buggy behavior.
+   - **Backend**: Full HTTP responses (status code, headers, body), error logs from the server.
+5. Record expected vs. actual behavior **based on what you observed**, not what you read in code.
+
+### What counts as reproduction evidence
+
+- Playwright screenshot showing a UI element is hidden when it should be visible
+- curl response showing HTTP 500 when it should be 200
+- Server log showing an exception during an API call you made
+
+### What does NOT count as reproduction evidence
+
+- "Code analysis confirms the bug" — this is NOT reproduction
+- "The logic shows enableDirectToken is never restored" — this is analysis, NOT reproduction
+- `curl -sk -o /dev/null -w "%{http_code}" <url>` returning 200 — this only proves the page loads, NOT that the bug exists
+**REST API reference:** See the REST API Reference section in CLAUDE.md
 
 ## Step 4: Locate Related Tests
 
-Analyze the test coverage related to the issue.
+Analyze only the unit test coverage related to the issue.
 
 ## Step 5: Write the Output Artifact
 
-Create the directory `.ai/` at the repo root if it doesn't exist. Write the analysis to `.ai/issue-analysis-<issue_number>.md` using this exact format:
+Create the directory `.ai/` at the repo root if it doesn't exist. Write the analysis to `.ai/ia-<issue_number>.md` using this exact format:
 
 ```markdown
 # Issue Analysis — [Issue #ID]: [Issue Title]
@@ -45,18 +70,19 @@ Create the directory `.ai/` at the repo root if it doesn't exist. Write the anal
 ## Classification
 - **Type:** Bug / Not a Bug (with explanation)
 - **Severity Assessment:** Critical / High / Medium / Low
-- **Affected Component(s):** [from agents.md module map]
-- **Affected Feature(s):** [from agents.md feature inventory]
+- **Affected Component(s):** [component names]
+- **Affected Feature(s):** [feature names]
 
 ## Reproducibility
-- **Reproducible:** Yes / No
+- **Reproducible:** Yes / No (ONLY "Yes" if you triggered the bug at runtime and observed it. Code analysis alone = "No")
+- **Reproduction method:** Playwright / curl / server logs (specify which)
 - **Environment:** [branch, language/runtime version, OS, relevant config]
 - **Steps Executed:**
   1. [step]
   2. [step]
 - **Expected Behavior:** [what should happen]
-- **Actual Behavior:** [what actually happened]
-- **Logs/Evidence:** [attached or inline]
+- **Actual Behavior:** [what actually happened — describe what you OBSERVED, not what you read in code]
+- **Evidence:** [screenshots in .ai/screenshots-<issue_number>/, curl output, or server log excerpts — MUST be from runtime, not code]
 
 ## Root Cause Analysis
 Brief analysis of what is likely causing the bug based on reproduction results.
@@ -66,13 +92,11 @@ Brief analysis of what is likely causing the bug based on reproduction results.
 - **Coverage gaps identified:** [paths with no tests]
 - **Proposed test plan:**
   - Unit test: [description]
-  - Integration test: [description]
   - Negative/edge cases: [description]
 ```
 
 ## Step 6: Cleanup
 
-- Stop any servers started.
 - Revert any temporary config or data changes.
 - Ensure the working tree is clean.
 
@@ -80,3 +104,5 @@ Brief analysis of what is likely causing the bug based on reproduction results.
 
 - **Never guess.** If you encounter ambiguity you cannot resolve from available documents, stop and ask the developer.
 - **Artifacts over memory.** The output artifact must be complete enough for a different agent to pick up where you left off.
+- **Server startup:** The start command and the log polling loop MUST be in the same Bash tool call with `timeout: 200000`. Do not split them into separate calls.
+- **Playwright best practices:** Wait for elements rather than using fixed sleeps (`page.waitForSelector()`, `page.locator().waitFor()`). Log assertions clearly — print expected vs actual so the output is useful in artifacts.
