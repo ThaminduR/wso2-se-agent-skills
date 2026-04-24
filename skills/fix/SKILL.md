@@ -62,5 +62,6 @@ If the plan says the issue is not a bug, already fixed, or has unresolved open q
 
 - **No planning here.** Do not re-analyze root cause or redesign the fix. If the plan looks wrong, stop and ask for the plan to be updated — don't silently deviate.
 - **Server startup:** The start command and the log polling loop MUST be in the same Bash tool call with `timeout: 200000`. Do not split them into separate calls.
+- **Polling discipline.** When you write a Bash loop that waits on something — a sentinel string in a log, a process to exit, a file to appear — remember the failure mode: if that something never arrives, the loop runs forever and deadlocks the whole phase. Decide up front how long you're willing to wait, enforce it inside the loop, and plan what to do if the cap trips (inspect the actual state, fail the phase cleanly, or try a different approach).
 - **Fresh pack only.** Never restart an in-place server. Always kill, delete, re-extract, patch, and start fresh per CLAUDE.md.
 - **Runtime evidence only.** "The build succeeded" or "the diff looks correct" is NOT a dev-test pass. The fix report's PASSED status must be backed by observed runtime behavior (Playwright screenshot, curl response, server log excerpt).
