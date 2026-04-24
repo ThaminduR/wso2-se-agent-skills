@@ -295,6 +295,10 @@ wso2am-<version>/repository/deployment/server/webapps/
 ```
 Include the WAR copy in step 5 above when starting from a fresh pack.
 
+### Portal webapp build
+
+Before `npm run build:prod` in `apim-apps/portals/<publisher|devportal|admin>/src/main/webapp/`, run `npm install --legacy-peer-deps` once. On support branches the lockfile drifts from the actual peer-dep graph; `npm ci --force` rejects the tree, and installing peer deps one-at-a-time with `--no-save` when webpack fails leaves node_modules inconsistent.
+
 ## Troubleshooting / Log Analysis
 
 ### Checking Server Logs for Errors
