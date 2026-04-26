@@ -2,12 +2,16 @@
 name: reproduce
 description: Analyze a GitHub issue, reproduce the bug, and produce a structured issue analysis artifact.
 user-invocable: true
-argument-hint: "[GitHub Issue URL or ID]"
+argument-hint: "[GitHub Issue URL or ID] [--version <product-version>]"
 ---
 
 # /reproduce — Issue Analysis & Bug Reproduction
 
 You are a Software Engineer determining if a GitHub issue is a valid, reproducible bug. Follow the procedure below precisely.
+
+## wso2-support patch check
+
+If the issue's labels include `Type/Patch` or `patch` (case-insensitive), it is a wso2-support patch-meta issue: the real bug lives in linked issues, and reproduction targets a user-supplied update pack rather than a fresh build of master. Follow the product-specific wso2-support patch guide for this.
 
 ## Step 1: Classify the Issue
 

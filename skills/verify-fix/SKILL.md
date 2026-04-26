@@ -21,6 +21,8 @@ argument-hint: "[GitHub Issue URL or ID]"
 
 3. **Build and deploy the fix on a real server** — Build the changed module(s), apply patches per CLAUDE.md, start the product/server, and confirm it reached the documented readiness signal. The reproduction in step 4 must run against THIS started instance — not a unit-test runner, not a mock, not an embedded harness. If the server fails to start with the patch applied, stop and report; the fix is not verified.
 
+   If the plan indicates this is a wso2-support patch fix, follow the product-specific wso2-support patch guide for this.
+
 4. **Verify at runtime against the running server** — Re-run the reproduction from `.ai/ia-<issue_number>.md` (or the issue's reproduction steps) against the started server. The bug behavior must no longer occur, observed via the same channel that originally exhibited it (browser, HTTP request, log output).
 
    **For frontend bugs:** Use Playwright — follow the "Interacting with the Frontend (Playwright)" section in CLAUDE.md.

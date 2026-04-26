@@ -37,6 +37,7 @@ Fill in every row before scoring complexity. **When uncertain, mark Y.** Each fo
 | UI contract change | Y/N — <detail> | Intentional flow/layout/navigation reshape → **NO-GO**; visual bug fix (missing button, misaligned label) → ok |
 | Behavior change for existing users | Y/N — <detail> | Judgment-call ("should probably return empty list instead of 404") → **NO-GO**; unambiguous return-to-spec → ok |
 | Backward-compat break | Y/N — <detail> | Y → at least **REVIEW REQUIRED** |
+| Patch-mode fix (targets a `wso2-support` branch) | Y/N — <detail> | Y → at least **REVIEW REQUIRED** |
 | Components involved (full list) | <list> | — |
 
 **If any forcing rule fires NO-GO, skip to Step 4.** Otherwise carry the strongest demotion (REVIEW REQUIRED if Backward-compat = Y) into Step 3.
@@ -103,6 +104,7 @@ Gates only demote (GO → REVIEW REQUIRED → NO-GO). They never promote.
 | UI contract change | Y/N — <detail> | <none / NO-GO> |
 | Behavior change for existing users | Y/N — <detail> | <none / NO-GO> |
 | Backward-compat break | Y/N — <detail> | <none / REVIEW REQUIRED> |
+| Patch-mode fix (`wso2-support` branch) | Y/N — <detail> | <none / REVIEW REQUIRED> |
 | Components involved | <list> | — |
 
 ## Complexity Inputs

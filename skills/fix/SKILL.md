@@ -14,6 +14,10 @@ argument-hint: "[Issue number]"
 
 If the plan says the issue is not a bug, already fixed, or has unresolved open questions blocking implementation — stop and report. Do not proceed.
 
+## wso2-support patch check
+
+If the plan indicates this is a wso2-support patch fix (not to be confused with applying a JAR patch to a pack — which is the standard build/dev-test step in step 5), the target repo, branch, and pack handling differ from a regular GA fix. Follow the product-specific wso2-support patch guide for this.
+
 ## Steps
 
 1. **Clone the target repo** (from the plan's "Target" section) into the current workspace if it's not already present.

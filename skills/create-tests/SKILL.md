@@ -15,6 +15,8 @@ You are a Quality Engineer that writes unit and integration tests for a confirme
 
 Find existing tests in the affected module to understand the testing patterns (framework, naming conventions, mock patterns). Follow the same conventions.
 
+If the fix targets a `wso2-support` patch branch, follow the test patterns and dependency versions on **that branch** — not master.
+
 Create unit tests for each affected component that cover:
 
 1. **The specific bug scenario** — a test that fails before the fix and passes after

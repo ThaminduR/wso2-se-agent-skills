@@ -44,6 +44,7 @@ Only proceed to create PRs if the verification report says **FIXED**.
      ```
      gh pr create --repo wso2/carbon-apimgt --head Tharsanan1:fix/4863 --base master
      ```
+     If the fix is a wso2-support patch, the upstream repo and base branch may differ — follow the product-specific wso2-support patch guide for this.
    - The PR description should include: issue link, root cause summary, what was changed, how it was verified, and test evidence — all extracted from the phase artifacts.
 
 4. **Write the fix report** to `.ai/fix-report-<issue_number>.md`:
