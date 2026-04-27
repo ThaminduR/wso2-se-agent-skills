@@ -59,8 +59,6 @@ Map dimensions to verdict:
 - **All Low** → **GO**
 - **Any Medium or High in any dimension** → **REVIEW REQUIRED**
 
-Any High dimension is a signal to call out explicitly in the Recommendation — Complexity = High means root cause confidence is shaky, Testability = High means automated verification won't be reliable, Diffusion / Blast Radius = High mean a wider area is in play. The verdict still caps at REVIEW REQUIRED; the report body must make the severity readable to a human reviewer.
-
 Take the strongest verdict from Step 1 and Step 2 as the **interim verdict**. Carry it to Step 3.
 
 ## Step 3: Demotion Gates
