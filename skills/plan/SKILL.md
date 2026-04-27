@@ -53,11 +53,14 @@ If `gh` returns an error (auth, rate limit, not found), stop and report the erro
 - If a prior `.ai/ia-<issue_number>.md` exists and says the issue is **already fixed** or **not reproducible** — report and stop. Do not produce a fix plan.
 - Otherwise, proceed.
 
-## Step 3: Identify the Target Repo and Source Version
+## Step 3: Identify the Target Repo(s) and Source Version(s)
 
-1. From the issue and its references, identify the **target source repo** (e.g., `carbon-apimgt`, `product-apim`). The referenced PRs are the strongest signal — they point directly at the repo where the fix will live.
-2. Identify the **affected module(s)** within that repo.
-3. Identify the **version to target**. Follow the "Checkout the matching source version" instructions in CLAUDE.md:
+A bug may require coordinated edits across multiple repos (e.g. a backend repo + a portal-UI repo). List every repo whose code must change. Referenced PRs are the strongest signal.
+
+For each target repo:
+
+1. Identify the **affected module(s)**.
+2. Identify the **version to target**. Follow the "Checkout the matching source version" instructions in CLAUDE.md:
    - Find the jar version in the product pack's `plugins/` directory for the affected module.
    - Find the matching git tag in the source repo.
    - Record the exact tag the fix should be based off of. Do NOT check it out yet — that's the `/fix` skill's job.
@@ -68,7 +71,7 @@ If `gh` returns an error (auth, rate limit, not found), stop and report the erro
 - Otherwise, derive the likely root cause from the issue description, comments, and the code referenced in related PRs.
 - If the root cause is unclear from the available context, say so in the plan — do not invent one. Flag that `/reproduce` should be run first.
 
-Read the relevant source files in the target repo to confirm the root cause hypothesis. Keep this focused — you're trying to pinpoint the change, not refactor the module.
+Read the relevant source files in the target repo(s) to confirm the root cause hypothesis. Keep this focused — you're trying to pinpoint the change, not refactor the module.
 
 ## Step 5: Write the Plan
 
@@ -88,20 +91,23 @@ Create `.ai/` if it doesn't exist. Write the plan to `.ai/plan-<issue_number>.md
 - **Prior reproduction artifact:** `.ai/ia-<issue_number>.md` (yes / no — if yes, cite key findings)
 
 ## Target
-- **Repo:** <owner/repo>
-- **Module(s):** <module paths>
-- **Version tag to base the fix on:** <tag, e.g. v9.33.65>
+One row per affected repo:
+
+| Repo | Module(s) | Version tag to base the fix on |
+|------|-----------|--------------------------------|
+| <owner/repo> | <module paths> | <tag, e.g. v9.33.65> |
+
 - **Working branch name (for /fix):** `fix/issue-<issue_number>`
 
 ## Root Cause
 <What's actually broken and why. Cite file paths and line numbers where relevant.>
 
 ## Proposed Change
-<Minimal change needed to fix it. Describe the behavior change, then list the concrete edits.>
+<Minimal change needed to fix it. Describe the behavior change, then list the concrete edits. Every repo in the Target table must have at least one edit row below — otherwise drop it from Target.>
 
-| File | Change |
-|------|--------|
-| <path> | <what to change and why> |
+| Repo | File | Change |
+|------|------|--------|
+| <owner/repo> | <path> | <what to change and why> |
 
 ## Risks & Side Effects
 <What could this break? Any backward-compatibility concerns? Config migration? Data migration? Leave empty if none.>

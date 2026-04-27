@@ -20,7 +20,9 @@ If the plan indicates this is a wso2-support patch fix (not to be confused with 
 
 ## Steps
 
-1. **Clone the target repo** (from the plan's "Target" section) into the current workspace if it's not already present.
+If the plan's "Target" table lists more than one repo, run steps 1–4 for each repo before moving to step 5.
+
+1. **Clone the target repo(s)** (from the plan's "Target" table) into the current workspace if not already present.
 
 2. **Checkout the matching source version.** Follow the "Checkout the matching source version" instructions in CLAUDE.md using the tag and working branch name recorded in the plan:
    ```
@@ -28,7 +30,7 @@ If the plan indicates this is a wso2-support patch fix (not to be confused with 
    ```
    Confirm the tag exists and matches the jar version in the product pack's `plugins/` directory. If they don't match, stop — the plan targeted the wrong version.
 
-3. **Implement the fix** exactly as described in the plan's "Proposed Change" section. Keep the change minimal. If during implementation you discover the plan is wrong or incomplete, stop and report — do not improvise a different fix silently.
+3. **Implement the fix** exactly as described in the plan's "Proposed Change" table. Keep the change minimal. If during implementation you discover the plan is wrong or incomplete, stop and report — do not improvise a different fix silently.
 
 4. **Build the changed module(s)** to verify they compile:
    ```
@@ -36,7 +38,7 @@ If the plan indicates this is a wso2-support patch fix (not to be confused with 
    ```
    Confirm the built jar version matches the version in the pack (e.g., `9.33.65-SNAPSHOT` source → `9.33.65` pack). If they don't match, you checked out the wrong tag — stop and fix.
 
-5. **Dev-test the fix.** Patch the product pack and verify the fix works at runtime. Follow the patching instructions in CLAUDE.md (extract fresh pack, apply JAR/WAR patches, start server). The start command and the log polling loop MUST be in the same Bash tool call with `timeout: 200000`. Run the "Dev Test Plan" steps from the plan artifact.
+5. **Dev-test the fix.** Patch the product pack with the rebuilt artifacts from all repos and verify the fix works at runtime. Follow the patching instructions in CLAUDE.md (extract fresh pack, apply JAR/WAR patches, start server). The start command and the log polling loop MUST be in the same Bash tool call with `timeout: 200000`. Run the "Dev Test Plan" steps from the plan artifact.
    - If the test **passes**: proceed to step 6.
    - If the test **fails**: analyze the failure, adjust the code (within the scope of the plan), rebuild, and test again. Each iteration must make **forward progress** — if you find yourself retrying the same failure without a clear new change, stop and report.
 
