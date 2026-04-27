@@ -2,7 +2,7 @@
 name: plan
 description: Produce an implementation plan for a GitHub issue by fetching the issue, its comments, and referenced issues/PRs. Does not require a prior reproduction.
 user-invocable: true
-argument-hint: "[GitHub Issue URL or ID] [--version <product-version>]"
+argument-hint: "[GitHub Issue URL or ID]"
 ---
 
 # /plan — Plan a Fix from a GitHub Issue
@@ -16,7 +16,7 @@ You are a Software Engineer producing a detailed implementation plan for a GitHu
 
 ## wso2-support patch check
 
-After fetching the issue (Step 1 below), if its labels include `Type/Patch` or `patch` (case-insensitive), it is a wso2-support patch-meta issue: the fix lands on a `wso2-support/<repo>` branch rather than `wso2/<repo>` master. The `--version` argument is required. Follow the product-specific wso2-support patch guide for this.
+After fetching the issue (Step 1 below), if its labels include `Type/Patch` or `patch` (case-insensitive), it is a wso2-support patch-meta issue: the fix lands on a `wso2-support/<repo>` branch rather than `wso2/<repo>` master. Follow the product-specific wso2-support patch guide for this.
 
 ## Step 1: Gather Issue Context
 
