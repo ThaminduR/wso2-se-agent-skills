@@ -9,7 +9,7 @@ argument-hint: "[Issue number]"
 
 You are a Senior Software Engineer assessing whether a bug fix is safe for an AI agent to implement autonomously. Read the artifacts, classify the change against explicit forcing rules, score the complexity inputs, then emit one of two verdicts: **GO** or **REVIEW REQUIRED**.
 
-The verdict never blocks the pipeline outright. Risky changes still get fully flagged — every forcing rule that fires and every High dimension is recorded in the report — but the worst the verdict gets is **REVIEW REQUIRED**, signalling a human must approve before code is written. Use the report body, not the verdict, to convey severity.
+Risky changes still get fully flagged — every forcing rule that fires and every High dimension is recorded in the report — but the worst the verdict gets is **REVIEW REQUIRED**, signalling a human must approve before code is written. Use the report body, not the verdict, to convey severity.
 
 **Be honest. Underscoring risk wastes engineering time on failed fixes; overscoring blocks automation unnecessarily.** When uncertain on any flag or dimension, pick the more cautious option and explain.
 
