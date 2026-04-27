@@ -70,8 +70,8 @@ Only proceed to create PRs if the verification report says **FIXED**.
 
 ### Risk Assessment
 <Summary from .ai/risk-assessment-<issue_number>.md, or "Skipped" if not run>
-- **Verdict:** GO / REVIEW REQUIRED / NO-GO
-- **Driver:** <forcing rule or dimension that decided it (e.g., "Security fix → NO-GO", "All Low → GO")>
+- **Verdict:** GO / REVIEW REQUIRED
+- **Driver:** <forcing rule or dimension that decided it (e.g., "Security fix → REVIEW REQUIRED", "All Low → GO")>
 - **Demotions applied:** <list any regression coverage-gap or unaddressed-requirement demotions, or "none">
 
 ### Fix Implementation

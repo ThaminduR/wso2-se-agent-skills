@@ -1,13 +1,15 @@
 ---
 name: risk-assessment
-description: Decide whether a bug fix is safe for an AI agent to auto-implement. Produces a GO / REVIEW REQUIRED / NO-GO verdict.
+description: Decide whether a bug fix is safe for an AI agent to auto-implement. Produces a GO / REVIEW REQUIRED verdict.
 user-invocable: true
 argument-hint: "[Issue number]"
 ---
 
 # /risk-assessment — Auto-fix Safety Gate
 
-You are a Senior Software Engineer assessing whether a bug fix is safe for an AI agent to implement autonomously. Read the artifacts, classify the change against explicit forcing rules, score the complexity inputs, then emit one of three verdicts: **GO**, **REVIEW REQUIRED**, **NO-GO**.
+You are a Senior Software Engineer assessing whether a bug fix is safe for an AI agent to implement autonomously. Read the artifacts, classify the change against explicit forcing rules, score the complexity inputs, then emit one of two verdicts: **GO** or **REVIEW REQUIRED**.
+
+The verdict never blocks the pipeline outright. Risky changes still get fully flagged — every forcing rule that fires and every High dimension is recorded in the report — but the worst the verdict gets is **REVIEW REQUIRED**, signalling a human must approve before code is written. Use the report body, not the verdict, to convey severity.
 
 **Be honest. Underscoring risk wastes engineering time on failed fixes; overscoring blocks automation unnecessarily.** When uncertain on any flag or dimension, pick the more cautious option and explain.
 
@@ -26,20 +28,20 @@ If any artifact says "not a bug", "not reproducible", or "already fixed" → sto
 
 ## Step 1: Change Metadata (forcing rules)
 
-Fill in every row before scoring complexity. **When uncertain, mark Y.** Each forcing rule is non-negotiable.
+Fill in every row before scoring complexity. **When uncertain, mark Y.** Each forcing rule is non-negotiable — every Y must be called out in the report even though the worst it can do is force REVIEW REQUIRED.
 
 | Attribute | Value | Forcing rule |
 |---|---|---|
-| Security fix (auth, authz, tokens, encryption, sessions, input sanitization) | Y/N — <detail> | Y → **NO-GO** |
-| High-risk components (auth, request routing core, token validation, encryption, TLS, or any component the project `CLAUDE.md` lists as critical) | Y/N — <which> | Y → **NO-GO** |
-| Data migration / schema change (column / type / constraint / semantic-index change) | Y/N — <detail> | Y → **NO-GO** |
-| API contract break (signature, response shape, status code, required field) | Y/N — <detail> | Y → **NO-GO** |
-| UI contract change | Y/N — <detail> | Intentional flow/layout/navigation reshape → **NO-GO**; visual bug fix (missing button, misaligned label) → ok |
-| Behavior change for existing users | Y/N — <detail> | Judgment-call ("should probably return empty list instead of 404") → **NO-GO**; unambiguous return-to-spec → ok |
-| Backward-compat break | Y/N — <detail> | Y → at least **REVIEW REQUIRED** |
+| Security fix (auth, authz, tokens, encryption, sessions, input sanitization) | Y/N — <detail> | Y → **REVIEW REQUIRED** |
+| High-risk components (auth, request routing core, token validation, encryption, TLS, or any component the project `CLAUDE.md` lists as critical) | Y/N — <which> | Y → **REVIEW REQUIRED** |
+| Data migration / schema change (column / type / constraint / semantic-index change) | Y/N — <detail> | Y → **REVIEW REQUIRED** |
+| API contract break (signature, response shape, status code, required field) | Y/N — <detail> | Y → **REVIEW REQUIRED** |
+| UI contract change | Y/N — <detail> | Intentional flow/layout/navigation reshape → **REVIEW REQUIRED**; visual bug fix (missing button, misaligned label) → ok |
+| Behavior change for existing users | Y/N — <detail> | Judgment-call ("should probably return empty list instead of 404") → **REVIEW REQUIRED**; unambiguous return-to-spec → ok |
+| Backward-compat break | Y/N — <detail> | Y → **REVIEW REQUIRED** |
 | Components involved (full list) | <list> | — |
 
-**If any forcing rule fires NO-GO, skip to Step 4.** Otherwise carry the strongest demotion (REVIEW REQUIRED if Backward-compat = Y) into Step 3.
+If any forcing rule fires, the interim verdict is **REVIEW REQUIRED**; record every rule that fired in the report and continue to Step 2 to fill in the complexity profile (Step 2 cannot demote further, but the dimensions still document why review is needed).
 
 ## Step 2: Complexity Inputs
 
@@ -56,16 +58,16 @@ Score each dimension Low / Medium / High. Use the project's `CLAUDE.md` for prod
 
 Map dimensions to verdict:
 
-- **All Low** → **Simple → GO**
-- **Any Medium, none High** → **Complex → REVIEW REQUIRED**
-- **Complexity = High** OR **Testability = High** → **NO-GO** (can't reliably get it right or can't reliably verify it)
-- **Diffusion = High** OR **Blast Radius = High** → at least **REVIEW REQUIRED**
+- **All Low** → **GO**
+- **Any Medium or High in any dimension** → **REVIEW REQUIRED**
+
+Any High dimension is a signal to call out explicitly in the Recommendation — Complexity = High means root cause confidence is shaky, Testability = High means automated verification won't be reliable, Diffusion / Blast Radius = High mean a wider area is in play. The verdict still caps at REVIEW REQUIRED; the report body must make the severity readable to a human reviewer.
 
 Take the strongest verdict from Step 1 and Step 2 as the **interim verdict**. Carry it to Step 3.
 
 ## Step 3: Demotion Gates
 
-Gates only demote (GO → REVIEW REQUIRED → NO-GO). They never promote.
+Gates only demote (GO → REVIEW REQUIRED). They never promote, and REVIEW REQUIRED is the floor.
 
 **Regression analysis** — minimum one row. "None" is only acceptable for truly isolated changes (e.g., fixing a doc typo); justify it.
 
@@ -73,7 +75,7 @@ Gates only demote (GO → REVIEW REQUIRED → NO-GO). They never promote.
 |---|---|---|---|
 | <behavior> | <mechanism> | <test path / "coverage gap"> | <what to do> |
 
-→ 2+ `coverage gap` rows → **demote one tier**.
+→ 2+ `coverage gap` rows → demote to **REVIEW REQUIRED**.
 
 **Requirement coverage** — every explicit ask from the issue, comments, and referenced issues/PRs. Don't silently drop requirements because they look out of scope.
 
@@ -81,27 +83,27 @@ Gates only demote (GO → REVIEW REQUIRED → NO-GO). They never promote.
 |---|---|---|
 | <requirement> | Issue / Comment by @user / Referenced #N | Addressed / Partial / Not Addressed |
 
-→ Any Partial / Not Addressed → at least **REVIEW REQUIRED**.
-→ Conflicting requirements (two parties want opposite behavior) → **NO-GO**.
+→ Any Partial / Not Addressed → **REVIEW REQUIRED**.
+→ Conflicting requirements (two parties want opposite behavior) → **REVIEW REQUIRED**, and call out the conflict explicitly in the Recommendation so a human can arbitrate.
 
 ## Step 4: Write `.ai/risk-assessment-<n>.md`
 
 ```markdown
 # Risk Assessment — Issue #<n>: <title>
 
-**Verdict:** GO | REVIEW REQUIRED | NO-GO
+**Verdict:** GO | REVIEW REQUIRED
 **Inputs:** `ia-<n>.md` <y/n>, `plan-<n>.md` <y/n>
 <If both exist and disagree on root cause or scope, describe the disagreement here.>
 
 ## Change Metadata
 | Attribute | Value | Forcing effect |
 |---|---|---|
-| Security fix | Y/N — <detail> | <none / NO-GO> |
-| High-risk components | Y/N — <which> | <none / NO-GO> |
-| Data migration / schema change | Y/N — <detail> | <none / NO-GO> |
-| API contract break | Y/N — <detail> | <none / NO-GO> |
-| UI contract change | Y/N — <detail> | <none / NO-GO> |
-| Behavior change for existing users | Y/N — <detail> | <none / NO-GO> |
+| Security fix | Y/N — <detail> | <none / REVIEW REQUIRED> |
+| High-risk components | Y/N — <which> | <none / REVIEW REQUIRED> |
+| Data migration / schema change | Y/N — <detail> | <none / REVIEW REQUIRED> |
+| API contract break | Y/N — <detail> | <none / REVIEW REQUIRED> |
+| UI contract change | Y/N — <detail> | <none / REVIEW REQUIRED> |
+| Behavior change for existing users | Y/N — <detail> | <none / REVIEW REQUIRED> |
 | Backward-compat break | Y/N — <detail> | <none / REVIEW REQUIRED> |
 | Components involved | <list> | — |
 
@@ -113,7 +115,7 @@ Gates only demote (GO → REVIEW REQUIRED → NO-GO). They never promote.
 | Complexity | Low/Med/High | <one line — note the +1 bump if plan-only> |
 | Testability | Low/Med/High | <one line> |
 
-**Interim verdict (Steps 1+2):** GO | REVIEW REQUIRED | NO-GO — <which rule decided it>
+**Interim verdict (Steps 1+2):** GO | REVIEW REQUIRED — <which rule or dimension decided it; list every forcing rule that fired and every High dimension>
 
 ## Regression
 <table; coverage-gap count; demotion applied y/n>
@@ -122,7 +124,7 @@ Gates only demote (GO → REVIEW REQUIRED → NO-GO). They never promote.
 <table; unaddressed list; demotion applied y/n>
 
 ## Recommendation
-<One paragraph. Final verdict with reasoning. Call out every demotion that fired and which forcing rule or dimension drove the verdict. If forced upward by a Partial requirement or coverage gap, say so explicitly.>
+<One paragraph. Final verdict with reasoning. List every forcing rule that fired, every High dimension, every coverage gap, and every Partial / Not Addressed / conflicting requirement. The verdict caps at REVIEW REQUIRED; this paragraph is where severity actually gets communicated to the human reviewer — be specific about what they need to scrutinize and why.>
 ```
 
 ## Calibration Examples
@@ -133,18 +135,19 @@ Gates only demote (GO → REVIEW REQUIRED → NO-GO). They never promote.
 | Add a missing null check in a single method | GO | All Low |
 | Fix a misaligned button on the admin page | GO | UI bug fix, not a contract reshape |
 | Fix a config-object copy constructor + a template file across 2 repos | REVIEW REQUIRED | Diffusion = Medium |
-| Add a non-breaking REST response field used by one client flow | REVIEW REQUIRED | Backward-compat = N but behavior change forces a glance |
-| Change token validation logic in the auth layer | NO-GO | Security fix forcing rule |
-| Database schema migration to add a column | NO-GO | Data migration forcing rule |
-| Reshape the publisher navigation menu | NO-GO | Intentional UI contract reshape |
-| Multi-node clustered deployment bug, can't reproduce locally | NO-GO | Testability = High |
-| Caching race condition in shared throttle counter | NO-GO | Complexity = High |
+| Add a non-breaking REST response field used by one client flow | REVIEW REQUIRED | Behavior change for existing users |
+| Change token validation logic in the auth layer | REVIEW REQUIRED | Security fix forcing rule (call out auth-layer scrutiny in Recommendation) |
+| Database schema migration to add a column | REVIEW REQUIRED | Data migration forcing rule (call out migration reversibility in Recommendation) |
+| Reshape the publisher navigation menu | REVIEW REQUIRED | Intentional UI contract reshape |
+| Multi-node clustered deployment bug, can't reproduce locally | REVIEW REQUIRED | Testability = High (call out manual verification need in Recommendation) |
+| Caching race condition in shared throttle counter | REVIEW REQUIRED | Complexity = High (call out shaky root cause in Recommendation) |
 
 ## Rules
 
-- Forcing rules are non-negotiable. Don't quietly soften them when they're inconvenient.
-- Crucial-component involvement → NO-GO regardless of diff size.
-- Can't auto-verify → can't auto-fix. Testability = High → NO-GO.
+- Forcing rules are non-negotiable. Don't quietly soften them when they're inconvenient — every Y must be recorded even though the verdict caps at REVIEW REQUIRED.
+- The verdict has only two values (GO, REVIEW REQUIRED). Severity lives in the report body — every fired forcing rule, every High dimension, every coverage gap, and every unaddressed requirement must be listed in the Recommendation.
+- Crucial-component involvement → REVIEW REQUIRED, and explicitly tell the reviewer why the area is sensitive.
+- Can't auto-verify → flag it loudly. Testability = High → REVIEW REQUIRED with an explicit note that automated verification will not be reliable.
 - Read the actual source before scoring dimensions. Don't score from the issue description alone.
 - Demotions only; gates never promote.
-- The artifact must stand on its own — a human reviewer or a different agent should be able to understand the verdict without re-doing the analysis.
+- The artifact must stand on its own — a human reviewer or a different agent should be able to understand the verdict (and, more importantly, what specifically to scrutinize) without re-doing the analysis.
